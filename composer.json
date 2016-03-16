@@ -1,5 +1,6 @@
 {
 	"name": "hbi/automation",
+	"version": "1.0.0",
 	"description": "Automation Classes & Methods",
 	"keywords": ["selenium", "php", "automation"],
 	"homepage": "https://healthybackinstitute.com",
@@ -7,6 +8,12 @@
 	"license": "Apache-2.0",
 	"support": {
 	},
+	"authors": [
+	    {
+	      "name": "Michael Hamson",
+	      "email": "michael@mazzee.com"
+	    }
+	],
 	"require": {
 		"php": ">=5.3.19"
 	},
