@@ -14,15 +14,6 @@
 	      "email": "michael@mazzee.com"
 	    }
 	],
-	"require": {
-		"php": ">=5.3.19"
-	},
-	"require-dev": {
-		"phpunit/phpunit": "4.6.*"
-	},
-	"suggest": {
-		"phpdocumentor/phpdocumentor": "2.*"
-	},
 	"autoload": {
 		"psr-4": {
 			"HBI\\": "lib/"
