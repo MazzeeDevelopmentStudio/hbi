@@ -1,19 +1,15 @@
 {
-	"name": "hbi/automation",
-	"version": "1.0.0",
-	"description": "Automation Classes & Methods",
-	"keywords": ["selenium", "php", "automation"],
-	"homepage": "https://healthybackinstitute.com",
-	"type": "library",
-	"license": "Apache-2.0",
-	"support": {
-	},
-	"authors": [
-	    {
-	      "name": "Michael Hamson",
-	      "email": "michael@mazzee.com"
-	    }
-	],
+    "name": "hbi/automation",
+    "description": "HBI Automation Library",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Michael Hamson",
+            "email": "michael@mazzee.com"
+        }
+    ],
+    "require": {},
 	"autoload": {
 		"psr-4": {
 			"HBI\\": "lib/"
