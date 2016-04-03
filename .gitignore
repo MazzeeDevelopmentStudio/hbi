@@ -1,5 +1,6 @@
 # HBI Automation Ignores
 global.settings.php
+config/global.php
 
 # Composer Global Ignores
 composer.phar
