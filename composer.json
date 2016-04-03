@@ -1,0 +1,18 @@
+{
+    "name": "hbi/automation",
+    "description": "HBI Automation Library",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Michael Hamson",
+            "email": "michael@mazzee.com"
+        }
+    ],
+    "require": {},
+	"autoload": {
+		"psr-4": {
+			"HBI\\": "lib/"
+		}
+	}
+}

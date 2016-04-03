@@ -1,0 +1,7 @@
+<?php
+
+DEFINE("QAHOST", "");
+DEFINE("QASERVER", "");
+DEFINE("ADMINUSER", "");
+DEFINE("ADMINPASS", "");
+DEFINE("LOGSDIR", "");
