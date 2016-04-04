@@ -12,7 +12,7 @@ class HBIData
     }
 
     /**
-     * [GetDataFromFile description]
+     * [GetDataFromFile sample description]
      * @param [type] $file [description]
      */
     public function GetDataFromFile($file)
