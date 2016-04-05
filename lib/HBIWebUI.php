@@ -20,6 +20,11 @@ class HBIWebUI
         $this->_driver     = $driver;
     }
 
+    /**
+     * [clickButton description]
+     * @param  [type] $selector [description]
+     * @return [type]           [description]
+     */
     public function clickButton($selector)
     {
         $btn = $this->_driver->findElement(
@@ -28,6 +33,13 @@ class HBIWebUI
         $btn->click();
     }
 
+    /**
+     * [enterFieldData description]
+     * @param  [type] $fieldname  [description]
+     * @param  [type] $fieldvalue [description]
+     * @param  [type] $fieldby    [description]
+     * @return [type]             [description]
+     */
     public function enterFieldData($fieldname, $fieldvalue, $fieldby)
     {
         $field = $this->_driver->findElement(
@@ -36,6 +48,11 @@ class HBIWebUI
         $field->sendKeys($fieldvalue);
     }
 
+    /**
+     * [clickTab description]
+     * @param  [type] $tabtext [description]
+     * @return [type]          [description]
+     */
     public function clickTab($tabtext)
     {
         $lt = $this->_driver->findElement(
@@ -44,6 +61,9 @@ class HBIWebUI
         $lt->click();
     }
 
+    /**
+     * [setSelectValue description]
+     */
     public function setSelectValue()
     {
         // $select = $this->_driver->findElement(
@@ -51,6 +71,12 @@ class HBIWebUI
         // );
     }
 
+    /**
+     * [clearField description]
+     * @param  [type] $fieldname [description]
+     * @param  [type] $fieldby   [description]
+     * @return [type]            [description]
+     */
     public function clearField($fieldname, $fieldby)
     {
         $element = $this->_driver->findElement(
@@ -59,6 +85,12 @@ class HBIWebUI
         $element->clear();
     }
 
+    /**
+     * [removeInputedValue description]
+     * @param  [type] $fieldname [description]
+     * @param  [type] $fieldby   [description]
+     * @return [type]            [description]
+     */
     public function removeInputedValue($fieldname, $fieldby)
     {
         $elements = $this->_driver->findElements(
@@ -74,4 +106,20 @@ class HBIWebUI
             $el->click();
         }
     }
+
+    /**
+     * [waitForDataTableLoad description]
+     * @return [type] [description]
+     */
+    public function waitForDataTableLoad()
+    {
+        $cssClass = "div.dataTables_paginate.paging_simple_numbers";
+
+        $this->_driver->wait(20, 1000)->until(
+            WebDriverExpectedCondition::presenceOfElementLocated(
+                WebDriverBy::cssSelector($cssClass)
+            )
+        );
+    }
+
 }
