@@ -5,6 +5,8 @@ use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\WebDriverWindow;
+use \Facebook\WebDriver\WebDriverElement;
+use \Facebook\WebDriver\WebDriverSelect;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver;
 
@@ -42,6 +44,8 @@ class HBIWebUI
      */
     public function enterFieldData($fieldname, $fieldvalue, $fieldby)
     {
+        error_log(print_r($fieldvalue,true).PHP_EOL);
+
         $field = $this->_driver->findElement(
           WebDriverBy::$fieldby($fieldname)
         );
@@ -69,6 +73,16 @@ class HBIWebUI
         // $select = $this->_driver->findElement(
         //     WebDriverBy::
         // );
+    }
+
+    public function getOptions($selector)
+    {
+        $select = $this->_driver->findElement(
+          WebDriverBy::cssSelector($selector)
+        );
+
+        $wds = new WebDriverSelect($select);
+        return $wds->getOptions();
     }
 
     /**
@@ -122,4 +136,13 @@ class HBIWebUI
         );
     }
 
+    public function refreshPage()
+    {
+        $this->_driver->navigate()->refresh();
+    }
+
+    public function getSaveNotificationResult()
+    {
+
+    }
 }

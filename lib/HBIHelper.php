@@ -8,6 +8,7 @@ class HBIHelper
 {
     public static function createRandomEmail($person)
     {
-        return sprintf("TEST-%s%s%s@scoutpup.com", $person->first_name, $person->last_name, $person->postal_code);
+        $rnd = rand(1, 9);
+        return sprintf("TEST-%s-%s%s%s@scoutpup.com", $rnd, $person->first_name, $person->last_name, $person->postal_code);
     }
 }

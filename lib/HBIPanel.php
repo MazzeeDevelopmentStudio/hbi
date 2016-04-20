@@ -120,4 +120,50 @@ class HBIPanel
         $this->_webui->clickButton($selector);
     }
 
+    public function waitForNotification()
+    {
+        $messageBx    = "#gritter-notice-wrapper .gritter-item-wrapper";
+        $errorClass   = "gritter-item-wrapper growl-danger";
+        $successClass = "gritter-item-wrapper growl-info";
+        $txResult     = false;
+
+        // Message TITLE: div.gritter-item div.gritter-with-image span.gritter-title
+        // Message TEXT: div.gritter-item div.gritter-with-image p
+
+        try {
+            $this->_driver->wait(20, 1000)->until(
+                WebDriverExpectedCondition::presenceOfElementLocated(
+                    WebDriverBy::cssSelector($messageBx)
+                )
+            );
+
+            $msgBx = $this->_driver->findElement(
+                WebDriverBy::cssSelector($messageBx)
+            );
+
+            $msgBxClass = $msgBx->getAttribute('class');
+            $txResult = $msgBxClass == $successClass ? true : false;
+
+
+            $msgTitle = $this->_driver->findElement(
+                WebDriverBy::cssSelector('div.gritter-item div.gritter-with-image span.gritter-title')
+            );
+
+            $msgBody = $this->_driver->findElement(
+                WebDriverBy::cssSelector('div.gritter-item div.gritter-with-image p')
+            );
+
+            if(!$txResult) {
+                error_log( sprintf( 'Failure Results Message: (%s) %s', $msgTitle->getText(), $msgBody->getText() ) );
+            }
+
+        } catch (TimeOutException $e) {
+            // Should we capture this?
+            error_log('THIS CAPTURE WORKS!'.PHP_EOL);
+            error_log( print_r($e, true) );
+        }
+
+        return  $txResult;
+    }
+
 }
