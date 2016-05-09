@@ -19,6 +19,7 @@ class HBIPanel
     private $_window;
     private $_cookies;
     private $_webui;
+    private $_successClass;
 
     function __construct(RemoteWebDriver $rwd)
     {
@@ -28,20 +29,27 @@ class HBIPanel
 
         $this->_window = New WebDriverWindow($this->_driver);
         $this->_webui  = new HBIWebUI($this->_driver);
+
+        $this->successClass = "gritter-item-wrapper growl-info";
     }
 
     Public function logIn(Array $credentials)
     {
         $this->_driver->get(QASERVER.'/login');
-        $this->_window->maximize();
 
         $this->AddCookie(array(
           'name' => 'cookie_name',
           'value' => 'cookie_value',
         ));
 
-        $this->_webui->enterFieldData("email", $credentials['user'], "name");
-        $this->_webui->enterFieldData("password", $credentials['pass'], "name");
+        $this->_webui->enterFieldData(
+            WebDriverBy::name("email"),
+            $credentials['user']
+        );
+        $this->_webui->enterFieldData(
+            WebDriverBy::name("password"),
+            $credentials['pass']
+        );
 
         $this->_webui->clickButton('button.btn.btn-success.btn-block');
     }
@@ -141,20 +149,11 @@ class HBIPanel
                 WebDriverBy::cssSelector($messageBx)
             );
 
-            $msgBxClass = $msgBx->getAttribute('class');
-            $txResult = $msgBxClass == $successClass ? true : false;
-
-
-            $msgTitle = $this->_driver->findElement(
-                WebDriverBy::cssSelector('div.gritter-item div.gritter-with-image span.gritter-title')
-            );
-
-            $msgBody = $this->_driver->findElement(
-                WebDriverBy::cssSelector('div.gritter-item div.gritter-with-image p')
-            );
+            $msgContent = $this->getNotificationBoxContent($msgBx);
 
             if(!$txResult) {
-                error_log( sprintf( 'Failure Results Message: (%s) %s', $msgTitle->getText(), $msgBody->getText() ) );
+                // error_log( sprintf( 'Failure Results Message: (%s) %s', $msgTitle->getText(), $msgBody->getText() ) );
+                error_log( sprintf( 'Failure Results Message: (%s) %s', $msgContent['Title']->getText(), $msgContent['Body']->getText() ) );
             }
 
         } catch (TimeOutException $e) {
@@ -166,4 +165,30 @@ class HBIPanel
         return  $txResult;
     }
 
+    /**
+     * [getNotificationBoxContent description]
+     * @param  WebDriverElement $element [description]
+     * @return [type]                    [description]
+     */
+    public function getNotificationBoxContent(WebDriverElement $element)
+    {
+
+        $msgBxClass = $element->getAttribute('class');
+        $txResult = $msgBxClass == $this->successClass ? true : false;
+
+        // We are actually not doign the right thing here
+        // TODO: Fix this
+        $msgTitle = $this->_driver->findElement(
+            WebDriverBy::cssSelector('div.gritter-item div.gritter-with-image span.gritter-title')
+        );
+
+        // We are actually not doign the right thing here
+        // TODO: Fix this
+        $msgBody = $this->_driver->findElement(
+            WebDriverBy::cssSelector('div.gritter-item div.gritter-with-image p')
+        );
+
+        return array("Title"=>$msgTitle, "Body"=>$msgBody);
+
+    }
 }

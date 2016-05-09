@@ -42,7 +42,7 @@ class HBIWebUI
      * @param  [type] $fieldby    [description]
      * @return [type]             [description]
      */
-    public function enterFieldData($fieldname, $fieldvalue, $fieldby)
+    public function enterFieldData2($fieldname, $fieldvalue, $fieldby)
     {
         error_log(print_r($fieldvalue,true).PHP_EOL);
 
@@ -50,6 +50,13 @@ class HBIWebUI
           WebDriverBy::$fieldby($fieldname)
         );
         $field->sendKeys($fieldvalue);
+    }
+
+    public function enterFieldData(WebDriverBy $by, $value)
+    {
+        $field = $this->_driver->findElement($by);
+
+        $field->sendKeys($value);
     }
 
     /**
@@ -122,12 +129,25 @@ class HBIWebUI
     }
 
     /**
+     * [getOneOfManyElements description]
+     * @param  WebDriverBy $webdriverby [description]
+     * @return [type]                   [description]
+     */
+    public function getOneOfManyElements(WebDriverBy $wdb) {
+        $elements = $this->_driver->findElements($wdb);
+        $rnd      = rand(0, count($elements)-1);
+
+        return $elements[$rnd];
+    }
+
+    /**
      * [waitForDataTableLoad description]
      * @return [type] [description]
      */
     public function waitForDataTableLoad()
     {
-        $cssClass = "div.dataTables_paginate.paging_simple_numbers";
+        // $cssClass = "div.dataTables_paginate.paging_simple_numbers";
+        $cssClass = "table.dataTable tbody tr.odd";
 
         $this->_driver->wait(20, 1000)->until(
             WebDriverExpectedCondition::presenceOfElementLocated(
