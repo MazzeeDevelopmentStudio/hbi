@@ -7,7 +7,7 @@ namespace HBI;
 class HBIPeople extends HBICollectionObject
 {
     public $objClassName = 'HBI\HBIPerson';
-    public $jsonDataFile = '/Users/Shared/GEO/address.json';
+    public $jsonDataFile = '/Users/Shared/Development/hbiqa/QAAutomation/tests/data/people.json';
 }
 
 

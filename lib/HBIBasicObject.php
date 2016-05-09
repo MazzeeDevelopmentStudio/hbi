@@ -61,37 +61,4 @@ class HBIBasicObject
 
         return false;
     }
-
-    public function randItemFromJsonFile($file) {
-        print_r($file);
-        $maxLineLength = 4096;
-        $handle        = @fopen($file, "r");
-        $randomItem    = null;
-
-        if ($handle) {
-            $random_line = null;
-            $line        = null;
-            $count       = 0;
-
-            while (($line = fgets($handle, $maxLineLength)) !== false) {
-                $count++;
-                // P(1/$count) probability of picking current line as random line
-                if(rand() % $count == 0) {
-                  $randomItem = $line;
-                }
-            }
-            if (!feof($handle)) {
-                echo "Error: unexpected fgets() fail\n";
-                fclose($handle);
-                return null;
-            } else {
-                fclose($handle);
-            }
-
-        }
-
-        return json_decode( rtrim( trim($randomItem), ",") );
-    }
-
-
 }

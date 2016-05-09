@@ -1,20 +1,19 @@
 <?php
-namespace HBI;
+namespace HBI\Admin;
 
-use \Facebook\WebDriver\Remote\DesiredCapabilities;
-use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
-use \Facebook\WebDriver\WebDriverElement;
-use \Facebook\WebDriver\WebDriverWindow;
 use \Facebook\WebDriver\WebDriverBy;
-use \Facebook\WebDriver;
 
 use HBI\Admin\Actions;
+use HBI\HBIBrowser;
+use HBI\HBIPeople;
+use HBI\HBIHelper;
+use HBI\HBIAddresses;
 
 /**
 *
 */
-class HBIAddPerson extends Actions
+class AddPerson extends Actions
 {
     private $person;
     private $address;

@@ -8,33 +8,26 @@ use \ReflectionClass;
 */
 class HBICollectionObject
 {
-    private $_data_path;
-    private $_objname;
-    private $_data;
-    private $_vdir;
+    public $objClassName;
+    public $jsonDataFile;
 
-    function __construct($datapath)
+    function __construct()
     {
 
-        $this->_data_path = $datapath;
-        $data             = file_get_contents($datapath);
-        $this->_data      = json_decode($data);
     }
 
     function buildCollection($collection_size = 1000) {
         $collection = new HBICollection;
 
         $class = $this->objClassName;
-        $obj   = new $class;
 
         for ($i=0;$i<$collection_size;$i++) {
-            $item   = $obj->randItemFromJsonFile( $this->jsonDataFile );
-print_r($item);
-            $pos    = array_rand($this->_data); // Grab data Randomly
-            $raw    = $this->_data[$pos];
-            $attrib = (object)$raw;
+            $item   = HBIHelper::randItemFromJsonFile( $this->jsonDataFile );
+            $obj    = new $class($item);
 
-            $collection->add($attrib);
+            $collection->add($obj);
+
+            unset($obj);
         }
 
         // Return the collection object

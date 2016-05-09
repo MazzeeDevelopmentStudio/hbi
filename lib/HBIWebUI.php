@@ -82,14 +82,29 @@ class HBIWebUI
         // );
     }
 
-    public function getOptions($selector)
+    public function getOptions(WebDriverBy $by)
     {
-        $select = $this->_driver->findElement(
-          WebDriverBy::cssSelector($selector)
-        );
+        $select = $this->_driver->findElement($by);
 
         $wds = new WebDriverSelect($select);
         return $wds->getOptions();
+    }
+
+    public function getHiddenOptions($elementId)
+    {   $script = "
+            var texts = [];
+            var sel = document.getElementById('$elementId');
+            for (var i=0, n=sel.options.length;i<n;i++) {
+              if (sel.options[i].text && sel.options[i].disabled == false) {
+                texts.push(sel.options[i].text);
+              }
+            }
+
+            return texts;";
+
+        $results = $this->_driver->executeScript($script);
+
+        return $results;
     }
 
     /**

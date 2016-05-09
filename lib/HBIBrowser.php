@@ -4,6 +4,7 @@ namespace HBI;
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverWindow;
+use \Facebook\WebDriver\WebDriverDimension;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
@@ -61,9 +62,41 @@ class HBIBrowser
         $this->_driver->get($url);
     }
 
+    public function makeNewDimensions($d)
+    {
+        $dimensions = new \stdClass();
+
+        if( empty($d) ) {
+            $dimensions->random = true;
+            $dimensions->width  = 480;
+            $dimensions->height = 640;
+
+            return $dimensions;
+        }
+
+        $dimensions->random = false;
+        $dimensions->width  = $d['width'];
+        $dimensions->height = $d['height'];
+
+
+        return $dimensions;
+    }
+
     public function maximizeWindow()
     {
         $this->_window->maximize();
+    }
+
+    /**
+     * [reSizeWindow description]
+     * @param  Object $dimensions [description]
+     * @return [type]             [description]
+     */
+    public function reSizeWindow($dimensions)
+    {
+        $wdd = new WebDriverDimension($dimensions->width, $dimensions->height);
+
+        $this->_window->setSize($wdd);
     }
 
     public function clickElement(WebDriverBy $by)

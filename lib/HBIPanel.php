@@ -152,8 +152,8 @@ class HBIPanel
             $msgContent = $this->getNotificationBoxContent($msgBx);
 
             if(!$txResult) {
-                // error_log( sprintf( 'Failure Results Message: (%s) %s', $msgTitle->getText(), $msgBody->getText() ) );
-                error_log( sprintf( 'Failure Results Message: (%s) %s', $msgContent['Title']->getText(), $msgContent['Body']->getText() ) );
+                // error_log( sprintf( 'Results Message: (%s) %s', $msgTitle->getText(), $msgBody->getText() ) );
+                error_log( sprintf( 'Results Message: (%s) %s', $msgContent['Title']->getText(), $msgContent['Body']->getText() ) );
             }
 
         } catch (TimeOutException $e) {
