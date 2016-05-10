@@ -4,17 +4,10 @@ namespace HBI;
 /**
 *
 */
-class HBICreditCards
+class HBICreditCards extends HBICollectionObject
 {
-    /**
-     * [__construct description]
-     */
-    function __construct()
-    {
-
-    }
-
-
+    public $objClassName = 'HBI\HBICreditCard';
+    public $jsonDataFile = '/Users/Shared/Development/hbiqa/QAAutomation/tests/data/creditcards.json';
 }
 
 

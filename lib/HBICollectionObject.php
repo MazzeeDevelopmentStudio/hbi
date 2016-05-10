@@ -30,6 +30,11 @@ class HBICollectionObject
             unset($obj);
         }
 
+        // Return the single object we the collection size is only 1
+        if($collection_size === 1) {
+            return $collection[0];
+        }
+
         // Return the collection object
         return $collection;
     }

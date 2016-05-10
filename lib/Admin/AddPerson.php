@@ -52,7 +52,7 @@ class AddPerson extends Actions
         $people       = new HBIPeople;
         $collection   = $people->buildCollection(1);
 
-        return $collection[0];
+        return $collection;
     }
 
     private function defineRandomPersonType()
