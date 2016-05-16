@@ -38,7 +38,6 @@ class HBIProducts
         }
 
         // Return the collection object
-        error_log($collection);
         return $collection;
     }
 }

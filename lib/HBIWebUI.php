@@ -44,8 +44,6 @@ class HBIWebUI
      */
     public function enterFieldData2($fieldname, $fieldvalue, $fieldby)
     {
-        error_log(print_r($fieldvalue,true).PHP_EOL);
-
         $field = $this->_driver->findElement(
           WebDriverBy::$fieldby($fieldname)
         );

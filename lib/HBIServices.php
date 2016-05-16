@@ -38,7 +38,6 @@ class HBIServices
         }
 
         // Return the collection object
-        error_log($collection);
         return $collection;
     }
 }

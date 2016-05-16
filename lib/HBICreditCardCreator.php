@@ -1,6 +1,8 @@
 <?php
 namespace HBI;
 
+use HBI\HBICreditCards;
+
 /**
 *
 */
@@ -39,11 +41,15 @@ class HBICreditCardCreator
 
             $cc->number = SELF::setCheckDigit($rndNumbers);
             $cc->cvv    = SELF::createCvv(
-                $cc->type == "american" ? true : false
-                );
-            $cc->expiration = SELF::createExpireDate();
+                            $cc->type == "american" ? true : false
+                          );
 
+            $cc->expiration = SELF::createExpireDate();
             $this->_cards[] = $cc;
+        }
+
+        if($genQty == 1) {
+            return $this->_cards[0];
         }
 
         return $this->_cards;
@@ -164,17 +170,25 @@ class HBICreditCardCreator
 
     private function createExpireDate($isExpired = false)
     {
-        return date("Y-m-d");
+        $exp = SELF::randomDate("2016-01-01", "2022-01-01");
+        print_r($exp);
+
+        return $exp;
+    }
+
+    // TODO: Move this to HBIHelper
+    function randomDate($start_date, $end_date)
+    {
+        // Convert to timetamps
+        $min = strtotime($start_date);
+        $max = strtotime($end_date);
+
+        // Generate random number using above bounds
+        $val = rand($min, $max);
+
+        // Convert back to desired date format
+        return date('Y-m-d', $val);
     }
 }
-
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-include_once('HBIBasicObject.php');
-include_once('HBICreditCard.php');
-
-$ccc = new HBICreditCardCreator('visa');
-$cards = $ccc->generate('random', 1000);
-
-print_r($cards);
+// include_once('HBIBasicObject.php');
+// include_once('HBICreditCard.php');
