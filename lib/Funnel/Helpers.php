@@ -89,17 +89,39 @@ class Helpers
         return $person;
     }
 
+    public static function randomlySelectUpsells(HBIBrowser $browser)
+    {
+        $selector  = false ? 'input.responsive-img' : 'a.nothanks';
+        $isPresent = WebDriverExpectedCondition::visibilityOfElementLocated(
+                        WebDriverBy::cssSelector($selector)
+                    );
 
-    public static function randomlySelectAddons(RemoteWebDriver $driver)
+        $browser->driver()->wait(20, 1000)->until(
+            $isClickable = WebDriverExpectedCondition::elementToBeClickable(
+                WebDriverBy::cssSelector($selector)
+            )
+        );
+
+        // error_log( print_r( array($isPresent, $isClickable), true) );
+
+        if($isPresent && $isClickable) {
+            $browser->clickElement(
+                WebDriverBy::cssSelector($selector)
+            );
+        }
+
+    }
+
+    public static function randomlySelectAddons(HBIBrowser $browser)
     {
         // OPT FOR ADDONS RANDOMALY
-        $addons = $driver->findElements(
-            WebDriverBy::cssSelector(".addon-checkbox1.filled-in")
+        $addons = $browser->driver()->findElements(
+            WebDriverBy::cssSelector(".addon-checkbox.filled-in")
         );
 
         foreach ($addons as $addon) {
             if (rand(0, 1)) {
-                $label = $driver->findElement(
+                $label = $browser->driver()->findElement(
                     WebDriverBy::cssSelector(
                         sprintf('label[for=%s]', $addon->getAttribute('id')) )
                 );
@@ -146,18 +168,97 @@ class Helpers
             $person->address->locality
         );
 
-        $aalid  = strtoupper($person->address->country) == "UNITED STATES" ? "$type-state_id" : "optin-province";
-        $select = new WebDriverSelect(
-            $browser->driver()->findElement(
-                WebDriverBy::id($aalid)
-            )
-        );
-        $select->selectByVisibleText($person->address->administrative_area_level_1);
+        $aalid  = strtoupper($person->address->country) == "UNITED STATES" ? "$type-state_id" : "$type-province";
+
+        if(strtoupper($person->address->country) == "UNITED STATES") {
+            $select = new WebDriverSelect(
+                $browser->driver()->findElement(
+                    WebDriverBy::id($aalid)
+                )
+            );
+            $select->selectByVisibleText($person->address->administrative_area_level_1);
+        } else {
+            $browser->addContentToFormField(
+                WebDriverBy::id($aalid),
+                $person->address->administrative_area_level_1
+            );
+        }
 
         $browser->addContentToFormField(
             WebDriverBy::id("$type-zip"),
             $person->address->postal_code
         );
+    }
+
+    public static function fillOutFLECACSPP(HBIPerson $person, HBIBrowser $browser)
+    {
+        SELF::fillOutFLECACSP($person, $browser);
+
+        $browser->addContentToFormField(
+            WebDriverBy::id("phone"),
+            $person->phone
+        );
+
+    }
+
+    public static function fillOutFLECACSP(HBIPerson $person, HBIBrowser $browser)
+    {
+        $browser->addContentToFormField(
+            WebDriverBy::id("first_name"),
+            sprintf('TEST-%s', $person->name)
+        );
+
+        $browser->addContentToFormField(
+            WebDriverBy::id("last_name"),
+            sprintf('TEST-%s', $person->surname)
+        );
+
+        $browser->addContentToFormField(
+            WebDriverBy::id("email"),
+            sprintf('TEST-%s', $person->email)
+        );
+
+        // optin-country_id
+        $select = new WebDriverSelect(
+            $browser->driver()->findElement(
+                WebDriverBy::id("optin-country_id")
+            )
+        );
+        $select->selectByVisibleText(strtoupper($person->address->country));
+
+        $browser->addContentToFormField(
+            WebDriverBy::id("address1"),
+            sprintf('%s %s',
+                $person->address->street_number,
+                $person->address->route
+            )
+        );
+        $browser->addContentToFormField(
+            WebDriverBy::id("city"),
+            $person->address->locality
+        );
+
+        $aalid  = strtoupper($person->address->country) == "UNITED STATES" ? "optin-state_id" : "optin-province";
+
+        if(strtoupper($person->address->country) == "UNITED STATES") {
+            $select = new WebDriverSelect(
+                $browser->driver()->findElement(
+                    WebDriverBy::id($aalid)
+                )
+            );
+            $select->selectByVisibleText($person->address->administrative_area_level_1);
+        } else {
+            $browser->addContentToFormField(
+                WebDriverBy::id($aalid),
+                $person->address->administrative_area_level_1
+            );
+        }
+
+        $browser->addContentToFormField(
+            WebDriverBy::id("zip"),
+            $person->address->postal_code
+        );
+
     }
 
     public static function fillOutCreditCardFormDetails(HBIPerson $person, HBIBrowser $browser)
@@ -205,6 +306,8 @@ class Helpers
         $number = rand(1111111111, 9999999999);
         $mask   = rand(1,8);
 
+        // error_log( print_r(SELF::formatPhoneNumber($number, $mask),true) );
+
         return SELF::formatPhoneNumber($number, $mask);
     }
 
@@ -221,7 +324,8 @@ class Helpers
     /*********************************************************************/
     public static function formatPhoneNumber($number, $mask)
     {
-        $val_num = SELF::validatePhoneNumber( $number );
+        // $val_num = SELF::validatePhoneNumber( $number );
+        $val_num = true;
 
         if(!$val_num && !is_string ( $number ) ) {
             echo "Number $number is not a valid phone number! \n";
@@ -356,5 +460,20 @@ class Helpers
         }
 
         return $valid['all'];
+    }
+
+    public static function getPriceFromString($string)
+    {
+        preg_match('/\$([0-9]+[\.]*[0-9]*)/', $string, $match);
+
+        return $match[1];
+    }
+
+    public static function verifyTotals()
+    {
+        // summary-subtotal
+        // summary-shipping
+        // summary-tax
+        // summary-total
     }
 }

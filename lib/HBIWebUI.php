@@ -1,6 +1,8 @@
 <?php
 namespace HBI;
 
+use HBI\Exception\AutomationException;
+
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
@@ -146,8 +148,8 @@ class HBIWebUI
      * @param  WebDriverBy $webdriverby [description]
      * @return [type]                   [description]
      */
-    public function getOneOfManyElements(WebDriverBy $wdb) {
-        $elements = $this->_driver->findElements($wdb);
+    public function getOneOfManyElements(WebDriverBy $by) {
+        $elements = $this->_driver->findElements($by);
         $rnd      = rand(0, count($elements)-1);
 
         return $elements[$rnd];

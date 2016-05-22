@@ -93,7 +93,7 @@ class AddPerson extends Actions
         // Create New Contact Info
         $addresses  = new HBIAddresses;
         $collection = $addresses->buildCollection(1);
-        $addr       = $collection[0];
+        $addr       = $collection;
 
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("addresses[0][address1]"),

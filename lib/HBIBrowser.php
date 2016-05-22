@@ -1,12 +1,16 @@
 <?php
 namespace HBI;
 
+use HBI\Exception\AutomationException;
+
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverWindow;
 use \Facebook\WebDriver\WebDriverDimension;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
+use \Facebook\WebDriver\Exception;
+use \Facebook\WebDriver\Exception\WebDriverException;
 
 /**
 *
@@ -21,6 +25,10 @@ class HBIBrowser
 
     function __construct($browser = "firefox")
     {
+        if($browser == 'random') {
+            $browser = $this->setRandomBrowser();
+        }
+
         $this->_capabilities = DesiredCapabilities::$browser();
         $this->_driver       = RemoteWebDriver::create(QAHOST, $this->_capabilities, 5000);
         $this->_window       = New WebDriverWindow($this->_driver);
@@ -82,6 +90,45 @@ class HBIBrowser
         return $dimensions;
     }
 
+    public function setRandomBrowser()
+    {
+        $browsers = $this->getBrowserList();
+        shuffle($browsers);
+
+        foreach ($browsers as $b) {
+            error_log( sprintf('Trying Browser: %s'.PHP_EOL, $b) );
+            $dc = DesiredCapabilities::$b();
+            try{
+                $driver = RemoteWebDriver::create(QAHOST, $dc, 5000);
+                $driver->quit();
+
+                unset($driver);
+            } catch(WebDriverException $e) {
+                // error_log( sprintf('Browser is not valid: %s %s %s', $b, PHP_EOL, print_r($e,true)) );
+                continue;
+            }
+
+            return $b;
+        }
+
+        return false;
+    }
+
+    public function getBrowserList()
+    {
+        $browsers = array(
+                        'chrome',
+                        'firefox',
+                        'internetExplorer',
+                        'opera'
+                        // 'safari'
+                        // 'phantomjs'
+                    );
+
+        return $browsers;
+
+    }
+
     public function maximizeWindow()
     {
         $this->_window->maximize();
@@ -104,8 +151,16 @@ class HBIBrowser
         // Get a single element from a list of one or more elements
         $el = $this->_webui->getOneOfManyElements($by);
 
+        if(empty($el)) {
+            throw new AutomationException("Element Not Found");
+        }
+
         // Bring it to view
         $el->getLocationOnScreenOnceScrolledIntoView();
+
+        $this->_driver->wait(5, 1000)->until(
+            WebDriverExpectedCondition::visibilityOf($el)
+        );
 
         // click it
         $el->click();

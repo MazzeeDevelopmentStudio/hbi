@@ -59,4 +59,32 @@ class HBIHelper
         return $randomItem;
     }
 
+    /**
+     * [getArrayOfWeightedValues description]
+     * @param  Array       $arrayOfWeightedValues [description]
+     * @param  Int|integer $resultSize            [description]
+     * @return Array                              [description]
+     */
+    public static function getArrayOfWeightedValues(Array $arrayOfWeightedValues, Int $resultSize)
+    {
+        $resultSet    = array();
+        $sumOfWeights = array_sum($arrayOfWeightedValues);
+        $resultSize   = $resultSize < 100 ? 100 : $resultSize; // 100 (min) to get real results
+
+        for($i=0; $i < $resultSize; $i++) {
+            // choose a random between 1 and the sum of the weights.
+            $random = rand(1, $sumOfWeights);
+            foreach($arrayOfWeightedValues as $name => $weighting) {
+                // decrement the random by the current weighting.
+                $random -= $weighting;
+                // The larger the weighting, the more likely random is less than zero.
+                if($random <= 0) {
+                    $resultSet[] = $name;
+                    break;
+                }
+            }
+        }
+
+        return $resultSet;
+    }
 }

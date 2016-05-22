@@ -39,6 +39,11 @@ class HBICreditCardCreator
             $rootDigits = SELF::getRootNumbersByCardType($cc);
             $rndNumbers = substr_replace($rndNumbers, $rootDigits, 0, strlen($rootDigits));
 
+            // For AMEX we only do 14+CheckDigit
+            if($cc->type == "american") {
+                $rndNumbers = substr($rndNumbers, 0, 14);
+            }
+
             $cc->number = SELF::setCheckDigit($rndNumbers);
             $cc->cvv    = SELF::createCvv(
                             $cc->type == "american" ? true : false
@@ -46,6 +51,8 @@ class HBICreditCardCreator
 
             $cc->expiration = SELF::createExpireDate();
             $this->_cards[] = $cc;
+
+            // error_log( sprintf('Credit Card: %s', print_r($cc,true)) );
         }
 
         if($genQty == 1) {
@@ -63,9 +70,9 @@ class HBICreditCardCreator
         $this->_roots = array(
             'visa'     => array('4'),
             'master'   => array('51', '52', '53', '54', '55'),
-            'diners'   => array('36', '36'),
-            'discover' => array('6011', '65'),
-            'jcb'      => array('35'),
+            // 'diners'   => array('36', '36'),
+            'discover' => array('6011'),
+            // 'jcb'      => array('35'),
             'american' => array('34', '37')
         );
     }
@@ -170,10 +177,10 @@ class HBICreditCardCreator
 
     private function createExpireDate($isExpired = false)
     {
-        $exp = SELF::randomDate("2016-01-01", "2022-01-01");
-        print_r($exp);
+        $now  = date('Y-m-d', time());
+        $till = date('Y-m-d', strtotime('+10 years'));
 
-        return $exp;
+        return SELF::randomDate($now, $till);
     }
 
     // TODO: Move this to HBIHelper
@@ -190,5 +197,3 @@ class HBICreditCardCreator
         return date('Y-m-d', $val);
     }
 }
-// include_once('HBIBasicObject.php');
-// include_once('HBICreditCard.php');
