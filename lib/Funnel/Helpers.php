@@ -9,6 +9,7 @@ use HBI\HBIAddresses;
 use HBI\HBICreditCards;
 use HBI\HBICreditCardCreator;
 
+use \facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\WebDriverWindow;
 use \Facebook\WebDriver\WebDriverActions;
@@ -91,24 +92,30 @@ class Helpers
 
     public static function randomlySelectUpsells(HBIBrowser $browser)
     {
-        $selector  = false ? 'input.responsive-img' : 'a.nothanks';
+        $selector  = rand(0,1) ? 'input.responsive-img' : 'a.nothanks';
         $isPresent = WebDriverExpectedCondition::visibilityOfElementLocated(
                         WebDriverBy::cssSelector($selector)
                     );
+        try {
+            $browser->driver()->wait(20, 1000)->until(
+                $isClickable = WebDriverExpectedCondition::elementToBeClickable(
+                    WebDriverBy::cssSelector($selector)
+                )
+            );
 
-        $browser->driver()->wait(20, 1000)->until(
-            $isClickable = WebDriverExpectedCondition::elementToBeClickable(
-                WebDriverBy::cssSelector($selector)
-            )
-        );
-
-        // error_log( print_r( array($isPresent, $isClickable), true) );
+        } catch (NoSuchElementException $e) {
+            return false;
+        }
 
         if($isPresent && $isClickable) {
             $browser->clickElement(
                 WebDriverBy::cssSelector($selector)
             );
+            // In Future return usable info about upsell
+            return $selector;
         }
+
+        return false;
 
     }
 
@@ -190,18 +197,7 @@ class Helpers
         );
     }
 
-    public static function fillOutFLECACSPP(HBIPerson $person, HBIBrowser $browser)
-    {
-        SELF::fillOutFLECACSP($person, $browser);
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("phone"),
-            $person->phone
-        );
-
-    }
-
-    public static function fillOutFLECACSP(HBIPerson $person, HBIBrowser $browser)
+    public static function fillOutFLE(HBIPerson $person, HBIBrowser $browser)
     {
         $browser->addContentToFormField(
             WebDriverBy::id("first_name"),
@@ -217,6 +213,32 @@ class Helpers
             WebDriverBy::id("email"),
             sprintf('TEST-%s', $person->email)
         );
+    }
+
+    public static function fillOutFLEP(HBIPerson $person, HBIBrowser $browser, $prefix=null)
+    {
+        SELF::fillOutFLE($person, $browser);
+
+        $browser->addContentToFormField(
+            WebDriverBy::id($prefix.'phone'),
+            $person->phone
+        );
+
+    }
+
+    public static function fillOutFLECACSPP(HBIPerson $person, HBIBrowser $browser)
+    {
+        SELF::fillOutFLECACSP($person, $browser);
+
+        $browser->addContentToFormField(
+            WebDriverBy::id("phone"),
+            $person->phone
+        );
+    }
+
+    public static function fillOutFLECACSP(HBIPerson $person, HBIBrowser $browser)
+    {
+        SELF::fillOutFLE($person, $browser);
 
         // optin-country_id
         $select = new WebDriverSelect(
@@ -263,15 +285,19 @@ class Helpers
 
     public static function fillOutCreditCardFormDetails(HBIPerson $person, HBIBrowser $browser)
     {
-        $browser->addContentToFormField(
-            WebDriverBy::id("cc_first_name"),
-            sprintf('TEST-%s', $person->name)
-        );
+        try {
+            $browser->addContentToFormField(
+                WebDriverBy::id("cc_first_name"),
+                sprintf('TEST-%s', $person->name)
+            );
 
-        $browser->addContentToFormField(
-            WebDriverBy::id("cc_last_name"),
-            sprintf('TEST-%s', $person->surname)
-        );
+            $browser->addContentToFormField(
+                WebDriverBy::id("cc_last_name"),
+                sprintf('TEST-%s', $person->surname)
+            );
+        } finally {
+            // Something
+        }
 
         $browser->addContentToFormField(
             WebDriverBy::id("cc_number"),
@@ -305,8 +331,6 @@ class Helpers
     {
         $number = rand(1111111111, 9999999999);
         $mask   = rand(1,8);
-
-        // error_log( print_r(SELF::formatPhoneNumber($number, $mask),true) );
 
         return SELF::formatPhoneNumber($number, $mask);
     }

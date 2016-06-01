@@ -12,6 +12,8 @@ use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\Exception;
 use \Facebook\WebDriver\Exception\WebDriverException;
 
+use \Facebook\WebDriver\Exception\UnknownServerException;
+
 /**
 *
 */
@@ -23,11 +25,15 @@ class HBIBrowser
     private $_panel;
     private $_webui;
 
+    private $_browsers;
+
     function __construct($browser = "firefox")
     {
         if($browser == 'random') {
             $browser = $this->setRandomBrowser();
         }
+
+        // echo sprintf('Browser: %s', print_r($browser,true));
 
         $this->_capabilities = DesiredCapabilities::$browser();
         $this->_driver       = RemoteWebDriver::create(QAHOST, $this->_capabilities, 5000);
@@ -70,6 +76,12 @@ class HBIBrowser
         $this->_driver->get($url);
     }
 
+    public function getCapabilities()
+    {
+        $cap = (array)$this->_capabilities;
+        return array_values($cap)[0];
+    }
+
     public function makeNewDimensions($d)
     {
         $dimensions = new \stdClass();
@@ -95,8 +107,11 @@ class HBIBrowser
         $browsers = $this->getBrowserList();
         shuffle($browsers);
 
+        // TODO: We should cache known available
+        // Browsers so we don't have to do this for
+        // each loop
+
         foreach ($browsers as $b) {
-            error_log( sprintf('Trying Browser: %s'.PHP_EOL, $b) );
             $dc = DesiredCapabilities::$b();
             try{
                 $driver = RemoteWebDriver::create(QAHOST, $dc, 5000);
@@ -111,17 +126,27 @@ class HBIBrowser
             return $b;
         }
 
-        return false;
+        // We will always require firefox... so this is the safest
+        // fall back (unless we start throwing an exception)
+        return 'firefox';
     }
 
     public function getBrowserList()
     {
         $browsers = array(
                         'chrome',
+                        'chrome',
+                        'chrome',
                         'firefox',
-                        'internetExplorer',
-                        'opera'
-                        // 'safari'
+                        'opera',
+                        'safari',
+                        'safari',
+                        'safari',
+                        'safari',
+                        'safari',
+                        'safari',
+                        'safari'
+                        // 'internetExplorer',
                         // 'phantomjs'
                     );
 
@@ -148,6 +173,7 @@ class HBIBrowser
 
     public function clickElement(WebDriverBy $by)
     {
+
         // Get a single element from a list of one or more elements
         $el = $this->_webui->getOneOfManyElements($by);
 
@@ -162,8 +188,15 @@ class HBIBrowser
             WebDriverExpectedCondition::visibilityOf($el)
         );
 
-        // click it
-        $el->click();
+        try {
+            // click it
+            $el->click();
+        // } catch (UnknownServerException $e) {
+        } finally {
+            // Element is not clickable
+            // throw new AutomationException("Element is not clickable");
+        }
+
     }
 
     public function waitForElement(WebDriverBy $by)
@@ -187,26 +220,107 @@ class HBIBrowser
 
     }
 
-    public function addCreditCardToForm($ccInfo)
+    // public function addCreditCardToForm($ccInfo)
+    // {
+
+    //     $this->addContentToFormField(
+    //         WebDriverBy::id("cc_first_name"),
+    //         "TEST-".$ccInfo->first_name
+    //     );
+    //     $this->addContentToFormField(
+    //         WebDriverBy::id("cc_last_name"),
+    //         "TEST-".$ccInfo->last_name
+    //     );
+    //     $this->addContentToFormField(
+    //         WebDriverBy::id("cc_number"),
+    //         $ccInfo->card_number
+    //     );
+    //     $this->addContentToFormField(
+    //         WebDriverBy::id("cc_cvv"),
+    //         $ccInfo->card_cvv
+    //     );
+
+    // }
+
+    public function TakeScreenshot($element=null)
     {
+        // Change the Path to your own settings
+        $screenshot = $this->TempDirectoryPath . time() . ".png";
 
-        $this->addContentToFormField(
-            WebDriverBy::id("cc_first_name"),
-            "TEST-".$ccInfo->first_name
-        );
-        $this->addContentToFormField(
-            WebDriverBy::id("cc_last_name"),
-            "TEST-".$ccInfo->last_name
-        );
-        $this->addContentToFormField(
-            WebDriverBy::id("cc_number"),
-            $ccInfo->card_number
-        );
-        $this->addContentToFormField(
-            WebDriverBy::id("cc_cvv"),
-            $ccInfo->card_cvv
-        );
+        // Change the driver instance
+        $this->driver->takeScreenshot($screenshot);
+        if(!file_exists($screenshot)) {
+            throw new Exception('Could not save screenshot');
+        }
 
+        if( ! (bool) $element) {
+            return $screenshot;
+        }
+
+        $element_screenshot = $this->TempDirectoryPath . time() . ".png"; // Change the path here as well
+
+        $element_width = $element->getSize()->getWidth();
+        $element_height = $element->getSize()->getHeight();
+
+        $element_src_x = $element->getLocation()->getX();
+        $element_src_y = $element->getLocation()->getY();
+
+        // Create image instances
+        $src = imagecreatefrompng($screenshot);
+        $dest = imagecreatetruecolor($element_width, $element_height);
+
+        // Copy
+        imagecopy($dest, $src, 0, 0, $element_src_x, $element_src_y, $element_width, $element_height);
+
+        imagepng($dest, $element_screenshot);
+
+        // unlink($screenshot); // unlink function might be restricted in mac os x.
+
+        if( ! file_exists($element_screenshot)) {
+            throw new Exception('Could not save element screenshot');
+        }
+
+        return $element_screenshot;
     }
+
+    public function chromeScreenshot()
+    {
+        // # needs the selenium-webdriver and mini_magick gems
+
+        // # Substitute these with the size of your web page
+        $page_width = 2000;
+        $page_height = 4000;
+
+        $height_captured = 0;
+        $y_tiles = 0;
+
+        // driver = Selenium::WebDriver # Connect to your Selenium Webdriver
+        // driver.navigate.to iframe_url
+        // driver.manage.window.maximize
+
+        // while height_captured < page_height
+        //   width_captured = 0
+        //   x_tiles = 0
+
+        //   while width_captured < page_width
+        //     tile_file = "screenshot-#{y_tiles}-#{x_tiles}.png"
+
+        //     driver.execute_script "window.scrollTo(#{width_captured}px, #{height_captured});"
+
+        //     driver.save_screenshot tile_file
+
+        //     screenshot = MiniMagick::Image.new tile_file
+        //     width_captured += screenshot.width
+        //     x_tiles += 1
+        //   end
+
+        //   height_captured += screenshot.height
+        //   y_tiles += 1
+        // end
+
+        // # Use imagemagick's montage command to stitch the screenshot tiles together
+        // `montage screenshot-[0-#(y_tiles}]-[0-#{x_tiles}].png -tile #{x_tiles}x#{y_tiles} -geometry #{screenshot.width}x#{screenshot.height}+0+0 screenshot.png`
+    }
+
 
 }

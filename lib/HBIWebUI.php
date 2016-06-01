@@ -12,6 +12,9 @@ use \Facebook\WebDriver\WebDriverSelect;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver;
 
+use \Facebook\WebDriver\Exception\UnknownServerException;
+use \Facebook\WebDriver\Exception\NoSuchElementException;
+
 /**
 *
 */
@@ -34,10 +37,16 @@ class HBIWebUI
         $btn = $this->_driver->findElement(
           WebDriverBy::cssSelector($selector)
         );
-        $btn->click();
+        try {
+            $btn->click();
+        } catch (UnknownServerException $e) {
+            // throw new AutomationException("Element is not clickable");
+        }
+
     }
 
     /**
+     * DEPRECIATED
      * [enterFieldData description]
      * @param  [type] $fieldname  [description]
      * @param  [type] $fieldvalue [description]
@@ -151,8 +160,14 @@ class HBIWebUI
     public function getOneOfManyElements(WebDriverBy $by) {
         $elements = $this->_driver->findElements($by);
         $rnd      = rand(0, count($elements)-1);
+        $el       = isset($elements[$rnd]) ? $elements[$rnd] : false;
 
-        return $elements[$rnd];
+        // quirk in selenium.... in case there is only one element
+        // if(!$el) {
+        //     $el = $this->_driver->findElement($by);
+        // }
+
+        return $el;
     }
 
     /**

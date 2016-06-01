@@ -14,11 +14,51 @@ class HBIFunnelHelper
     private $_total;
     private $_items;
 
+    public static function getListOfFunnels()
+    {
+
+    }
+
+    public static function getFunnelDetails()
+    {
+
+    }
+
+    public static function getFunnelStages()
+    {
+
+    }
+
+
+
+
+
     public function totalAmountTally()
     {
 
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * TODO: DELETE THIS METHOD
+     * [randomlySelectAddons description]
+     * @param  HBIBrowser $browser [description]
+     * @return [type]              [description]
+     */
     public function randomlySelectAddons(HBIBrowser $browser)
     {
         // OPT FOR ADDONS RANDOMALY

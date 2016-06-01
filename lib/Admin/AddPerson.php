@@ -11,8 +11,8 @@ use HBI\HBIHelper;
 use HBI\HBIAddresses;
 
 /**
-*
-*/
+ *
+ */
 class AddPerson extends Actions
 {
     private $person;
@@ -20,6 +20,12 @@ class AddPerson extends Actions
     private $contact;
     private $financial;
 
+    /**
+     * [__construct description]
+     * @param HBIBrowser $browser [description]
+     * @param [type]     $person  [description]
+     * @param [type]     $type    [description]
+     */
     function __construct(HBIBrowser $browser, $person=null, $type=null)
     {
         $this->browser      = $browser;
@@ -27,12 +33,19 @@ class AddPerson extends Actions
         $this->person->type = !empty($type) ? $type : $this->defineRandomPersonType();
     }
 
+    /**
+     * [__destruct description]
+     */
     function __destruct()
     {
         // TODO: Change this into a dynamic parent method
         error_log( print_r($this->person, true) );
     }
 
+    /**
+     * [run description]
+     * @return [type] [description]
+     */
     public function run()
     {
         $this->openAddPanel();
@@ -47,6 +60,10 @@ class AddPerson extends Actions
         $this->clickDoneButton();
     }
 
+    /**
+     * [defineRandomPerson description]
+     * @return [type] [description]
+     */
     private function defineRandomPerson()
     {
         $people       = new HBIPeople;
@@ -55,6 +72,10 @@ class AddPerson extends Actions
         return $collection;
     }
 
+    /**
+     * [defineRandomPersonType description]
+     * @return [type] [description]
+     */
     private function defineRandomPersonType()
     {
         $options = $this->browser->webui()->getHiddenOptions("user_types[]");
@@ -63,6 +84,9 @@ class AddPerson extends Actions
         return $options[$rand];
     }
 
+    /**
+     * [addPersonDataToForm description]
+     */
     private function addPersonDataToForm()
     {
         $this->setAccessLevel($this->person->type);
@@ -88,6 +112,9 @@ class AddPerson extends Actions
         );
     }
 
+    /**
+     * [addContactInfoToForm description]
+     */
     private function addContactInfoToForm()
     {
         // Create New Contact Info
@@ -109,11 +136,20 @@ class AddPerson extends Actions
         );
     }
 
+    /**
+     * [clickTab description]
+     * @param  [type] $tabname [description]
+     * @return [type]          [description]
+     */
     private function clickTab($tabname)
     {
         $this->browser->webui()->clickTab($tabname);
     }
 
+    /**
+     * [openAddPanel description]
+     * @return [type] [description]
+     */
     private function openAddPanel()
     {
         // TODO: Add ID to "Add" button
@@ -127,6 +163,10 @@ class AddPerson extends Actions
         );
     }
 
+    /**
+     * [clickSaveButton description]
+     * @return [type] [description]
+     */
     private function clickSaveButton()
     {
         // TODO: Use Save button's ID
@@ -134,6 +174,10 @@ class AddPerson extends Actions
         sleep(1);
     }
 
+    /**
+     * [clickDoneButton description]
+     * @return [type] [description]
+     */
     private function clickDoneButton()
     {
         // TODO: Add ID to "Done" button
@@ -141,6 +185,10 @@ class AddPerson extends Actions
         sleep(1);
     }
 
+    /**
+     * [setAccessLevel description]
+     * @param [type] $level [description]
+     */
     private function setAccessLevel($level)
     {
         $this->browser->webui()->clearField("s2id_autogen1","id");
@@ -152,6 +200,10 @@ class AddPerson extends Actions
         $this->browser->webui()->clickButton(".select2-match");
     }
 
+    /**
+     * [refreshPage description]
+     * @return [type] [description]
+     */
     private function refreshPage()
     {
         $this->browser->webui()->refreshPage();

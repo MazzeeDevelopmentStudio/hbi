@@ -8,21 +8,30 @@ class AutomationException extends Exception {
     private $results;
 
     /**
-    * @param string $message
-    * @param mixed $results
-    */
+     * [__construct description]
+     * @param [type] $message [description]
+     * @param [type] $results [description]
+     */
     public function __construct($message, $results = null) {
         parent::__construct($message);
         $this->results = $results;
     }
 
     /**
-    * @return mixed
-    */
+     * [getResults description]
+     * @return [type] [description]
+     */
     public function getResults() {
         return $this->results;
     }
 
+    /**
+     * [throwException description]
+     * @param  [type] $status_code [description]
+     * @param  [type] $message     [description]
+     * @param  [type] $results     [description]
+     * @return [type]              [description]
+     */
     public static function throwException($status_code, $message, $results)
     {
         switch ($status_code) {

@@ -70,10 +70,10 @@ class HBICreditCardCreator
         $this->_roots = array(
             'visa'     => array('4'),
             'master'   => array('51', '52', '53', '54', '55'),
+            'discover' => array('6011')
+            // 'american' => array('34', '37')
             // 'diners'   => array('36', '36'),
-            'discover' => array('6011'),
             // 'jcb'      => array('35'),
-            'american' => array('34', '37')
         );
     }
 
