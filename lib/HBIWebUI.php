@@ -58,6 +58,7 @@ class HBIWebUI
         $field = $this->_driver->findElement(
           WebDriverBy::$fieldby($fieldname)
         );
+
         $field->sendKeys($fieldvalue);
     }
 
@@ -65,6 +66,7 @@ class HBIWebUI
     {
         $field = $this->_driver->findElement($by);
 
+        $field->clear();
         $field->sendKeys($value);
     }
 

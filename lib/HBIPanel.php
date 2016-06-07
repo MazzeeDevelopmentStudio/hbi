@@ -35,8 +35,6 @@ class HBIPanel
 
     Public function logIn(Array $credentials)
     {
-        $this->_driver->get(CORESERVER.'/login');
-
         $this->AddCookie(array(
           'name' => 'cookie_name',
           'value' => 'cookie_value',

@@ -25,7 +25,7 @@ class HBILog
             mkdir($dir);
         }
 
-        $this->logfile = sprintf('%s/%s.log', $dir, $id);
+        $this->logfile = sprintf('%s/%s.json', $dir, $id);
     }
 
     public function foo()

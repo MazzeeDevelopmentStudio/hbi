@@ -15,6 +15,7 @@ use HBI\HBIAddresses;
  */
 class AddPerson extends Actions
 {
+    private $browser;
     private $person;
     private $address;
     private $contact;
@@ -122,6 +123,8 @@ class AddPerson extends Actions
         $collection = $addresses->buildCollection(1);
         $addr       = $collection;
 
+        $this->setContactState($addr->administrative_area_level_1);
+
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("addresses[0][address1]"),
             sprintf('%s %s', $addr->street_number, $addr->route)
@@ -196,6 +199,24 @@ class AddPerson extends Actions
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("s2id_autogen1"),
             $level
+        );
+        $this->browser->webui()->clickButton(".select2-match");
+    }
+
+    /**
+     * [setContactState description]
+     * @param [type] $state [description]
+     */
+    private function setContactState($state)
+    {
+        $this->browser->clickElement(
+            WebDriverBy::id("select2-chosen-3")
+        );
+        $this->browser->webui()->clearField("s2id_autogen3_search","id");
+        // $this->browser->webui()->removeInputedValue("a.select2-search-choice-close", "cssSelector");
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id("s2id_autogen3_search"),
+            $state
         );
         $this->browser->webui()->clickButton(".select2-match");
     }
