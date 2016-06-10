@@ -118,6 +118,29 @@ class HBIWebUI
         return $results;
     }
 
+    public function getPageDataPoints()
+    {
+        $script  = 'return {
+            funnelId:window.funnel_id,
+            pageId:window.funnel_page_id,
+            pageName:window.funnel_page_name,
+            stageId:window.funnel_stage_id,
+            stageType:window.funnel_stage_name};
+        ';
+        $results = $this->_driver->executeScript($script);
+
+        return (object)$results;
+    }
+
+    public function logConsoleMessages()
+    {
+        $script = "
+                    window.collectedErrors = [];
+                    window.onerror = function(errorMessage) {
+                        window.collectedErrors[window.collectedErrors.length] = errorMessage
+                    };";
+    }
+
     /**
      * [clearField description]
      * @param  [type] $fieldname [description]

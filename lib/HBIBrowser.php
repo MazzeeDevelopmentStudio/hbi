@@ -36,7 +36,7 @@ class HBIBrowser
         // echo sprintf('Browser: %s', print_r($browser,true));
 
         $this->_capabilities = DesiredCapabilities::$browser();
-        $this->_driver       = RemoteWebDriver::create(QAHOST, $this->_capabilities, 5000);
+        $this->_driver       = RemoteWebDriver::create(SELENIUMHUB, $this->_capabilities, 5000);
         $this->_window       = New WebDriverWindow($this->_driver);
         $this->_panel        = new HBIPanel($this->_driver);
         $this->_webui        = new HBIWebUI($this->_driver);
@@ -114,7 +114,7 @@ class HBIBrowser
         foreach ($browsers as $b) {
             $dc = DesiredCapabilities::$b();
             try{
-                $driver = RemoteWebDriver::create(QAHOST, $dc, 5000);
+                $driver = RemoteWebDriver::create(SELENIUMHUB, $dc, 5000);
                 $driver->quit();
 
                 unset($driver);
@@ -138,14 +138,14 @@ class HBIBrowser
                         'chrome',
                         'chrome',
                         'firefox',
-                        'opera',
-                        'safari',
-                        'safari',
-                        'safari',
-                        'safari',
-                        'safari',
-                        'safari',
-                        'safari'
+                        'opera'
+                        // 'safari',
+                        // 'safari',
+                        // 'safari',
+                        // 'safari',
+                        // 'safari',
+                        // 'safari',
+                        // 'safari'
                         // 'internetExplorer',
                         // 'phantomjs'
                     );

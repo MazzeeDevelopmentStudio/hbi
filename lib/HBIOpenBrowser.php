@@ -22,7 +22,7 @@ class HBIOpenBrowser
     function __construct($browser = "firefox")
     {
         $this->_capabilities = DesiredCapabilities::$browser();
-        $this->_driver       = RemoteWebDriver::create(QAHOST, $this->_capabilities, 5000);
+        $this->_driver       = RemoteWebDriver::create(SELENIUMHUB, $this->_capabilities, 5000);
         $this->_window       = New WebDriverWindow($this->_driver);
         $this->_panel        = new HBIPanel($this->_driver);
         $this->_webui        = new HBIWebUI($this->_driver);

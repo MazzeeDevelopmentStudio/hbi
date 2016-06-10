@@ -11,10 +11,10 @@ class HBIHelper
         $email = "TEST_BROKEN_EMAIL@scoutpup.com";
 
         if($obscure) {
-            $email = sprintf("TEST-%s@scoutpup.com", uniqid());
+            $email = sprintf("%s@scoutpup.com", uniqid());
         } else {
             $rnd = rand(1, 9);
-            $email = sprintf("TEST-%s-%s%s@scoutpup.com", $rnd, $person->name, $person->surname);
+            $email = sprintf("%s-%s%s@scoutpup.com", $rnd, $person->name, $person->surname);
         }
 
         return $email;
@@ -87,4 +87,48 @@ class HBIHelper
 
         return $resultSet;
     }
+
+    public static function getPageObjectFromApi()
+    {
+        // http://dev.losethebackpain.com/api/funnel/get-funnel-page
+    }
+
+    public static function getProductObjectFromApi()
+    {
+        // We are especially looking for shipping rates
+    }
+
+    /**
+     * [getDataFromHBICoreAPI description]
+     * @param  String $api    [description]
+     * @param  Array $fields [description]
+     * @return [JSON]         [description]
+     */
+    public static function getDataFromHBICoreAPI($api, $fields)
+    {
+        $url  = sprintf('%s/%s', APISERVER, $api);
+        $qstr = 'key='.APIKEY;
+
+        foreach($fields as $k => $v) {
+            $qstr = sprintf('%s&%s=%s', $qstr, $k, $v);
+        }
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_URL, $url . '?' . $qstr);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+        $json = curl_exec($ch);
+
+        return $json;
+    }
+
+// Street Number      = div.pac-container div.pac-item span.pac-item-query span.pac-matched
+// Street Name        = div.pac-container div.pac-item span span.pac-matched
+// City,State,Country = div.pac-container div.pac-item span
+
 }

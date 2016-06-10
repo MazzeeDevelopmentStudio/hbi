@@ -87,6 +87,12 @@ class Helpers
         $creator       = new HBICreditCardCreator;
         $person->card  = $creator->generate('random', 1);
 
+        // Add International Address to the mix
+        // This will be put into its more complete form later
+        if($person->residency !== "United States" && !(bool)rand(0,5)) {
+            $person->address->country = $person->residency;
+        }
+
         return $person;
     }
 
@@ -170,6 +176,16 @@ class Helpers
                 $person->address->route
             )
         );
+
+        if(!(bool)rand(0,10)) {
+            $browser->addContentToFormField(
+                WebDriverBy::id("$type-address2"),
+                sprintf('Apt. %s',
+                    $person->address->street_number
+                )
+            );
+        }
+
         $browser->addContentToFormField(
             WebDriverBy::id("$type-city"),
             $person->address->locality
@@ -197,21 +213,21 @@ class Helpers
         );
     }
 
-    public static function fillOutFLE(HBIPerson $person, HBIBrowser $browser)
+    public static function fillOutFLE(HBIPerson $person, HBIBrowser $browser, $prefix=null)
     {
         $browser->addContentToFormField(
-            WebDriverBy::id("first_name"),
-            sprintf('TEST-%s', $person->name)
+            WebDriverBy::id($prefix."first_name"),
+            $person->name
         );
 
         $browser->addContentToFormField(
-            WebDriverBy::id("last_name"),
-            sprintf('TEST-%s', $person->surname)
+            WebDriverBy::id($prefix."last_name"),
+            $person->surname
         );
 
         $browser->addContentToFormField(
-            WebDriverBy::id("email"),
-            sprintf('TEST-%s', $person->email)
+            WebDriverBy::id($prefix."email"),
+            $person->email
         );
     }
 
@@ -219,10 +235,17 @@ class Helpers
     {
         SELF::fillOutFLE($person, $browser);
 
-        $browser->addContentToFormField(
-            WebDriverBy::id($prefix.'phone'),
-            $person->phone
-        );
+        try {
+            $browser->addContentToFormField(
+                WebDriverBy::id($prefix.'phone'),
+                $person->phone
+            );
+        } catch (NoSuchElementException $e) {
+            $browser->addContentToFormField(
+                WebDriverBy::id($prefix.'primary_phone'),
+                $person->phone
+            );
+        }
 
     }
 
@@ -288,12 +311,12 @@ class Helpers
         try {
             $browser->addContentToFormField(
                 WebDriverBy::id("cc_first_name"),
-                sprintf('TEST-%s', $person->name)
+                $person->name
             );
 
             $browser->addContentToFormField(
                 WebDriverBy::id("cc_last_name"),
-                sprintf('TEST-%s', $person->surname)
+                $person->surname
             );
         } finally {
             // Something
@@ -500,4 +523,17 @@ class Helpers
         // summary-tax
         // summary-total
     }
+
+    public static function testifyPersonDetails(HBIPerson &$person, $prefix="TEST-")
+    {
+        $person->name    = sprintf('%s%s', $prefix, $person->name);
+        $person->surname = sprintf('%s%s', $prefix, $person->surname);
+        $person->email   = sprintf('%s%s', $prefix, $person->email);
+    }
+
+    public static function getListOfFunnels()
+    {
+
+    }
+
 }

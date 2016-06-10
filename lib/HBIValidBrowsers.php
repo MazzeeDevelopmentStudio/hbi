@@ -39,7 +39,7 @@ class HBIValidBrowsers
         foreach ($browsers as $b) {
             $dc = DesiredCapabilities::$b();
             try{
-                $driver = RemoteWebDriver::create(QAHOST, $dc, 5000);
+                $driver = RemoteWebDriver::create(SELENIUMHUB, $dc, 5000);
                 $driver->quit();
 
                 unset($driver);
