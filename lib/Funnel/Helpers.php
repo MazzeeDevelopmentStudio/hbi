@@ -117,7 +117,7 @@ class Helpers
             $browser->clickElement(
                 WebDriverBy::cssSelector($selector)
             );
-            // In Future return usable info about upsell
+            // TODO: Return usable info about upsell
             return $selector;
         }
 

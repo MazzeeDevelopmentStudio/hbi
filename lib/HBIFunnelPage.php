@@ -27,4 +27,14 @@ class HBIFunnelPage
         return (object)json_decode($json);
     }
 
+    public static function getFunnelPageObject($pageId)
+    {
+
+    }
+
+    public static function processStage($stageType)
+    {
+
+    }
+
 }
