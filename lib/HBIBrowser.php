@@ -33,10 +33,8 @@ class HBIBrowser
             $browser = $this->setRandomBrowser();
         }
 
-        // echo sprintf('Browser: %s', print_r($browser,true));
-
         $this->_capabilities = DesiredCapabilities::$browser();
-        $this->_driver       = RemoteWebDriver::create(SELENIUMHUB, $this->_capabilities, 5000);
+        $this->_driver       = RemoteWebDriver::create(SELENIUMHUB['mac'], $this->_capabilities, 5000);
         $this->_window       = New WebDriverWindow($this->_driver);
         $this->_panel        = new HBIPanel($this->_driver);
         $this->_webui        = new HBIWebUI($this->_driver);
@@ -178,6 +176,8 @@ class HBIBrowser
         $el = $this->_webui->getOneOfManyElements($by);
 
         if(empty($el)) {
+            // print_r(debug_backtrace());
+            return;
             throw new AutomationException("Element Not Found");
         }
 

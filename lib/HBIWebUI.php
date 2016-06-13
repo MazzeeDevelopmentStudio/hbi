@@ -5,6 +5,8 @@ use HBI\Exception\AutomationException;
 
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
+use \Facebook\WebDriver\Remote\RemoteKeyboard;
+use \Facebook\WebDriver\Remote\RemoteExecuteMethod;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\WebDriverWindow;
 use \Facebook\WebDriver\WebDriverElement;
@@ -86,11 +88,22 @@ class HBIWebUI
     /**
      * [setSelectValue description]
      */
-    public function setSelectValue()
+    public function setSelectValue(WebDriverBy $by, $value)
     {
-        // $select = $this->_driver->findElement(
-        //     WebDriverBy::
-        // );
+        // print_r($by);
+
+        $element = $this->_driver->findElement($by);
+        $element->getLocationOnScreenOnceScrolledIntoView();
+
+        $select = new WebDriverSelect($element);
+
+        // Get Current Value
+        // If Current Value == Value, then return
+        $cval = $select->getFirstSelectedOption();
+        if($cval != $value) {
+          $select->selectByVisibleText($value);
+        }
+
     }
 
     public function getOptions(WebDriverBy $by)
@@ -218,6 +231,16 @@ class HBIWebUI
 
     public function getSaveNotificationResult()
     {
+
+    }
+
+    public function changeFieldFocus()
+    {
+        // $rem = new RemoteExecuteMethod($this->_driver);
+        // $kb = new RemoteKeyboard($rem);
+
+        $kb = $this->_driver->getKeyboard();
+        $kb->sendKeys("\xEE\x80\x8C");
 
     }
 }
