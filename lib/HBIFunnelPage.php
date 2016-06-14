@@ -6,6 +6,7 @@ use HBI\Funnel\PgDataObject;
 use HBI\Funnel\Helpers;
 
 use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\Exception\NoSuchElementException;
 
 /**
 *
@@ -36,6 +37,8 @@ class HBIFunnelPage
                 );
 
         $this->funnelPage = (object)json_decode($json);
+
+        $this->hbilog->writeToLogFile( array("FunnelPage"=>$this->funnelPage) );
     }
 
     private function setPageDataObject()
@@ -75,6 +78,11 @@ class HBIFunnelPage
                 $ret = true;
                 break;
 
+            case 'Presell':
+                SELF::processFunnelPresell();
+                $ret = false;
+                break;
+
             default:
                 $ret = false;
                 break;
@@ -86,22 +94,35 @@ class HBIFunnelPage
 
     public function processSalesPageForm(HBIPerson $person, $formType)
     {
-        // Do we open a modal or go to new page? ($formType)
-        $this->browser->webui()->clickButton("a.modal-toggle img.responsive-img");
+        try {
+            $this->browser->driver()->findElement(
+                WebDriverBy::cssSelector("div.purchase-button a.modal-toggle")
+            );
+            $formType = "ajaxsubmit";
+        } catch (NoSuchElementException $e) {
+            $formType = "checkoutsubmit";
+        }
 
-        // Wait for Modal to load
+        $this->browser->webui()->clickButton("div.purchase-button");
+
+        // Wait for form to be useable
         $this->browser->waitForElement(
-            WebDriverBy::cssSelector(".modal.modal-scrollable")
+            WebDriverBy::cssSelector("form.".$formType)
         );
 
-        return $this->processFunnelForm($person);
+
+        $ret = $this->processFunnelForm($person);
+
+        $this->browser->webui()->clickButton("button#submit");
     }
 
     public function processOrderForm(HBIPerson $person)
     {
         $ret = $this->processFunnelForm($person);
         // Check for Add-Ons
-        Funnel\Helpers::randomlySelectAddons($this->browser);
+        $addons = Funnel\Helpers::randomlySelectAddons($this->browser);
+
+        $this->hbilog->writeToLogFile(array("addons"=>$addons));
 
         // Submit Order
         $this->browser->clickElement(
@@ -124,6 +145,8 @@ class HBIFunnelPage
 
         $fields = array_merge($selects, $inputs);
 
+        $reqfields = array();
+
         foreach ($fields as $field) {
             $fid    = $field->getAttribute("id");
             $b      = explode("-",$fid);
@@ -134,6 +157,17 @@ class HBIFunnelPage
             $val    = array();
 
             if(!$field->isDisplayed()) {continue;}
+
+            // TODO: This should go to the Helper Class
+            // try {
+                // $cssSlctr = 'label[for="'.$fid.'"] span.field-required';
+                // $el  = $this->browser->driver()->findElement(
+                //     WebDriverBy::cssSelector( $cssSlctr )
+                // );
+                // $reqfields[$fid] = $el->getAttribute("data-tooltip");
+            // } catch (NoSuchElementException $e) {
+                // Do nothing
+            // }
 
             // An array means either a complex and/ a child object
             // at this stage we will only have one sub-level support
@@ -178,7 +212,10 @@ class HBIFunnelPage
                     break;
             }
         }
-        sleep(10);
+
+
+
+        sleep(15);
         // Submit Form
         // Check for Form Errors
         // Correct Form items & resubmit?
@@ -189,8 +226,11 @@ class HBIFunnelPage
 
     public function processFunnelUpsell()
     {
-        $upsell = Funnel\Helpers::randomlySelectUpsells($this->browser);
         sleep(5);
+
+        $upsell = Funnel\Helpers::randomlySelectUpsells($this->browser);
+
+        $this->hbilog->writeToLogFile(array("upsell"=>$upsell));
 
         return true;
     }
@@ -220,6 +260,23 @@ class HBIFunnelPage
         $fpo = SELF::getFunnelPageObject($pageId);
 
         return $fpo->page->offers;
+    }
+
+    public function processFunnelPresell()
+    {
+        $this->hbilog->writeToLogFile( array("DEBUG"=>array($this->page,$this->funnelPage) ));
+        print_r(array("DEBUG"=>array($this->page,$this->funnelPage)));
+        return false;
+    }
+
+    public function isRequiredFormField(WebDriverBy $by)
+    {
+        try {
+            $el  = $this->browser->driver()->findElement($by);
+            return $el->getAttribute("data-tooltip");
+        } catch (NoSuchElementException $e) {
+            return false;
+        }
     }
 
 }

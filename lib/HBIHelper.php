@@ -104,7 +104,7 @@ class HBIHelper
      * @param  Array $fields [description]
      * @return [JSON]         [description]
      */
-    public static function getDataFromHBICoreAPI($api, $fields)
+    public static function getDataFromHBICoreAPI($api, $fields=array())
     {
         $url  = sprintf('%s/%s', APISERVER, $api);
         $qstr = 'key='.APIKEY;
@@ -125,6 +125,80 @@ class HBIHelper
         $json = curl_exec($ch);
 
         return $json;
+    }
+
+    public static function getCollectionOfFunnels()
+    {
+        $ptyp = array(
+            "SalesPage",
+            "Presell"
+            );
+
+        $json = HBIHelper::getDataFromHBICoreAPI(
+                    'api/funnel/get-funnel-pages'
+                );
+        $obj  = (object)$json;
+        $f    = json_decode($obj->scalar);
+        $fnls = array();
+
+        foreach ($f->pages as $page) {
+            if(in_array($page->stage->name,$ptyp)) {
+                $fnls[$page->stage->funnel_id][] = $page;
+            }
+        }
+
+        return $fnls;
+    }
+
+    public static function getListOfFunnelIds()
+    {
+        $json = HBIHelper::getDataFromHBICoreAPI(
+                    'api/funnel/get-funnels',
+                    array('active'=>1)
+                );
+        $obj  = (object)$json;
+        $f    = json_decode($obj->scalar);
+        $fids = array();
+
+        foreach ($f->funnels as $funnel) {
+            $fids[] = $funnel->id;
+
+            // print_r($funnel);
+        }
+
+        return $fids;
+    }
+
+    public static function getListOfFunnelStageIds($fid)
+    {
+        $json = HBIHelper::getDataFromHBICoreAPI(
+                    'api/funnel/get-funnel-stages',
+                    array('funnel_id'=>$fid)
+                );
+        $obj  = (object)$json;
+        $s    = json_decode($obj->scalar);
+        $sids = array();
+
+        foreach ($s->stages as $stage) {
+            $sids[] = $stage->id;
+        }
+
+        return $sids;
+    }
+
+    public static function getListofFunnelPageDetails($fid, $sid)
+    {
+        $json = HBIHelper::getDataFromHBICoreAPI(
+                    'api/funnel/get-funnel-pages',
+                    array('funnel_id'=>$fid, 'stage_id'=>$sid)
+                );
+        $obj  = (object)$json;
+        $p    = json_decode($obj->scalar);
+
+        print_r($p);
+
+        return null;
+
     }
 
 // Street Number      = div.pac-container div.pac-item span.pac-item-query span.pac-matched

@@ -10,6 +10,7 @@ use HBI\HBICreditCards;
 use HBI\HBICreditCardCreator;
 
 use \facebook\WebDriver\Exception\NoSuchElementException;
+use \Facebook\WebDriver\Exception\UnknownServerException;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\WebDriverWindow;
 use \Facebook\WebDriver\WebDriverActions;
@@ -103,7 +104,7 @@ class Helpers
                         WebDriverBy::cssSelector($selector)
                     );
         try {
-            $browser->driver()->wait(20, 1000)->until(
+            $browser->driver()->wait(5, 1000)->until(
                 $isClickable = WebDriverExpectedCondition::elementToBeClickable(
                     WebDriverBy::cssSelector($selector)
                 )
@@ -111,6 +112,8 @@ class Helpers
 
         } catch (NoSuchElementException $e) {
             return false;
+        } catch (UnknownServerException  $e) {
+
         }
 
         if($isPresent && $isClickable) {
@@ -127,6 +130,8 @@ class Helpers
 
     public static function randomlySelectAddons(HBIBrowser $browser)
     {
+        $added = array();
+
         // OPT FOR ADDONS RANDOMALY
         $addons = $browser->driver()->findElements(
             WebDriverBy::cssSelector(".addon-checkbox.filled-in")
@@ -134,15 +139,20 @@ class Helpers
 
         foreach ($addons as $addon) {
             if (rand(0, 1)) {
+                $addid = $addon->getAttribute('id');
                 $label = $browser->driver()->findElement(
                     WebDriverBy::cssSelector(
-                        sprintf('label[for=%s]', $addon->getAttribute('id')) )
+                        sprintf('label[for=%s]', $addid) )
                 );
 
                 $label->getLocationOnScreenOnceScrolledIntoView();
                 $label->click();
+
+                $added[] = $addid;
             }
         }
+
+        return $added;
     }
 
     public static function fillOutOrderFormBilling($sequence="caacsp", HBIPerson $person, HBIBrowser $browser)
