@@ -46,6 +46,9 @@ class HBIFunnelPage
         $pg         = json_encode($this->browser->webui()->getPageDataPoints());
         $this->page = new PgDataObject( $pg );
 
+        // DEBUG OUTPUT
+        print("Monitoring Page: ".$pg.PHP_EOL);
+
         unset($pg);
     }
 
@@ -113,7 +116,13 @@ class HBIFunnelPage
 
         $ret = $this->processFunnelForm($person);
 
-        $this->browser->webui()->clickButton("button#submit");
+        try {
+            $this->browser->webui()->clickButton("button#submit");
+        } catch (NoSuchElementException $e) {
+            // Do Nothing?
+        }
+
+        return $ret;
     }
 
     public function processOrderForm(HBIPerson $person)
@@ -123,6 +132,16 @@ class HBIFunnelPage
         $addons = Funnel\Helpers::randomlySelectAddons($this->browser);
 
         $this->hbilog->writeToLogFile(array("addons"=>$addons));
+
+        // DEBUG OUTPUT
+        foreach ($addons as $addon) {
+            print(sprintf(
+                "Addon: %s".PHP_EOL,
+                str_replace("addon-checkbox_",
+                null,
+                $addon
+            )));
+        }
 
         // Submit Order
         $this->browser->clickElement(

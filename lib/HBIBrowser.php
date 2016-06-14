@@ -27,14 +27,14 @@ class HBIBrowser
 
     private $_browsers;
 
-    function __construct($browser = "firefox")
+    function __construct($hub, $browser = "firefox")
     {
         if($browser == 'random') {
             $browser = $this->setRandomBrowser();
         }
 
         $this->_capabilities = DesiredCapabilities::$browser();
-        $this->_driver       = RemoteWebDriver::create(SELENIUMHUB['mac'], $this->_capabilities, 5000);
+        $this->_driver       = RemoteWebDriver::create($hub, $this->_capabilities, 5000);
         $this->_window       = New WebDriverWindow($this->_driver);
         $this->_panel        = new HBIPanel($this->_driver);
         $this->_webui        = new HBIWebUI($this->_driver);
