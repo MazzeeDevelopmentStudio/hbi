@@ -30,12 +30,20 @@ class Helpers
 
     }
 
-
+    /**
+     * [totalAmountTally description]
+     * @return [type] [description]
+     */
     public function totalAmountTally()
     {
 
     }
 
+    /**
+     * [getBillingAddressDetails description]
+     * @param  HBIPerson $person [description]
+     * @return [type]            [description]
+     */
     public static function getBillingAddressDetails(HBIPerson $person)
     {
         $isBillingTheSame = (bool)rand(0,1);
@@ -49,6 +57,11 @@ class Helpers
         return $person;
     }
 
+    /**
+     * [getShippingAddressDetails description]
+     * @param  HBIPerson $person [description]
+     * @return [type]            [description]
+     */
     public static function getShippingAddressDetails(HBIPerson $person)
     {
         $isBillingTheSame = (bool)rand(0,1);
@@ -62,6 +75,10 @@ class Helpers
         return $person;
     }
 
+    /**
+     * [getPerson description]
+     * @return [type] [description]
+     */
     public static function getPerson()
     {
         $ppl            = new HBIPeople();
@@ -72,6 +89,10 @@ class Helpers
         return $person;
     }
 
+    /**
+     * [getPersonWithAddress description]
+     * @return [type] [description]
+     */
     public static function getPersonWithAddress()
     {
         $person           = SELF::getPerson();
@@ -82,6 +103,10 @@ class Helpers
         return $person;
     }
 
+    /**
+     * [getPersonWithFullDetails description]
+     * @return [type] [description]
+     */
     public static function getPersonWithFullDetails()
     {
         $person        = SELF::getPersonWithAddress();
@@ -97,14 +122,19 @@ class Helpers
         return $person;
     }
 
+    /**
+     * [randomlySelectUpsells description]
+     * @param  HBIBrowser $browser [description]
+     * @return [type]              [description]
+     */
     public static function randomlySelectUpsells(HBIBrowser $browser)
     {
-        $selector  = rand(0,1) ? 'input.responsive-img' : 'a.nothanks';
+        $selector  = !(bool)rand(0,4) ? 'input.responsive-img' : 'a.nothanks';
         $isPresent = WebDriverExpectedCondition::visibilityOfElementLocated(
                         WebDriverBy::cssSelector($selector)
                     );
         try {
-            $browser->driver()->wait(5, 1000)->until(
+            $browser->driver()->wait(5, 50)->until(
                 $isClickable = WebDriverExpectedCondition::elementToBeClickable(
                     WebDriverBy::cssSelector($selector)
                 )
@@ -128,8 +158,54 @@ class Helpers
 
     }
 
+    /**
+     * [randomlySelectAddonsByIds description]
+     * @param  HBIBrowser $browser  [description]
+     * @param  Array      $addOnIds [description]
+     * @return [type]               [description]
+     */
+    public static function randomlySelectAddonsByIds(HBIBrowser $browser, Array $addOnIds)
+    {
+        $idPrefix = "addon-checkbox_";
+        $idCnt    = (int)count($addOnIds)*2;
+
+        foreach ($addOnIds as $k => $id) {
+            $lblForId = $idPrefix.$id;
+
+            if( !(bool)rand(0, $idCnt) ) {
+                try {
+                    $browser->webui()->setCheckBoxCheckedState(
+                        WebDriverBy::id($lblForId),
+                        1
+                    );
+                } catch (NoSuchElementException $e) {
+                    // Log it? Bug it?
+                }
+                continue;
+            }
+            try {
+                $browser->webui()->setCheckBoxCheckedState(
+                    WebDriverBy::id($lblForId),
+                    0
+                );
+            } catch (NoSuchElementException $e) {
+                // Log it? Bug it?
+            } finally {
+                unset($addOnIds[$k]);
+            }
+        }
+
+        return $addOnIds;
+    }
+
+    /**
+     * [randomlySelectAddons description]
+     * @param  HBIBrowser $browser [description]
+     * @return [type]              [description]
+     */
     public static function randomlySelectAddons(HBIBrowser $browser)
     {
+        print("FUNCTION randomlySelectAddons CALLED".PHP_EOL);
         $added = array();
 
         // OPT FOR ADDONS RANDOMALY
@@ -155,211 +231,6 @@ class Helpers
         return $added;
     }
 
-    public static function fillOutOrderFormBilling($sequence="caacsp", HBIPerson $person, HBIBrowser $browser)
-    {
-        $method = sprintf( 'fillOut%s', strtoupper($sequence) );
-
-        SELF::$method("billing", $person, $browser);
-    }
-
-    public static function fillOutOrderFormShipping($sequence="caacsp", HBIPerson $person, HBIBrowser $browser)
-    {
-        $method = sprintf( 'fillOut%s', strtoupper($sequence) );
-
-        SELF::$method("shipping", $person, $browser);
-    }
-
-    private static function fillOutCAACSP($type="billing", HBIPerson $person, HBIBrowser $browser)
-    {
-        // optin-country_id
-        $select = new WebDriverSelect(
-            $browser->driver()->findElement(
-                WebDriverBy::id("$type-country_id")
-            )
-        );
-        $select->selectByVisibleText(strtoupper($person->address->country));
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("$type-address1"),
-            sprintf('%s %s',
-                $person->address->street_number,
-                $person->address->route
-            )
-        );
-
-        if(!(bool)rand(0,10)) {
-            $browser->addContentToFormField(
-                WebDriverBy::id("$type-address2"),
-                sprintf('Apt. %s',
-                    $person->address->street_number
-                )
-            );
-        }
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("$type-city"),
-            $person->address->locality
-        );
-
-        $aalid  = strtoupper($person->address->country) == "UNITED STATES" ? "$type-state_id" : "$type-province";
-
-        if(strtoupper($person->address->country) == "UNITED STATES") {
-            $select = new WebDriverSelect(
-                $browser->driver()->findElement(
-                    WebDriverBy::id($aalid)
-                )
-            );
-            $select->selectByVisibleText($person->address->administrative_area_level_1);
-        } else {
-            $browser->addContentToFormField(
-                WebDriverBy::id($aalid),
-                $person->address->administrative_area_level_1
-            );
-        }
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("$type-zip"),
-            $person->address->postal_code
-        );
-    }
-
-    public static function fillOutFLE(HBIPerson $person, HBIBrowser $browser, $prefix=null)
-    {
-        $browser->addContentToFormField(
-            WebDriverBy::id($prefix."first_name"),
-            $person->name
-        );
-
-        $browser->addContentToFormField(
-            WebDriverBy::id($prefix."last_name"),
-            $person->surname
-        );
-
-        $browser->addContentToFormField(
-            WebDriverBy::id($prefix."email"),
-            $person->email
-        );
-    }
-
-    public static function fillOutFLEP(HBIPerson $person, HBIBrowser $browser, $prefix=null)
-    {
-        SELF::fillOutFLE($person, $browser);
-
-        try {
-            $browser->addContentToFormField(
-                WebDriverBy::id($prefix.'phone'),
-                $person->phone
-            );
-        } catch (NoSuchElementException $e) {
-            $browser->addContentToFormField(
-                WebDriverBy::id($prefix.'primary_phone'),
-                $person->phone
-            );
-        }
-
-    }
-
-    public static function fillOutFLECACSPP(HBIPerson $person, HBIBrowser $browser)
-    {
-        SELF::fillOutFLECACSP($person, $browser);
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("phone"),
-            $person->phone
-        );
-    }
-
-    public static function fillOutFLECACSP(HBIPerson $person, HBIBrowser $browser)
-    {
-        SELF::fillOutFLE($person, $browser);
-
-        // optin-country_id
-        $select = new WebDriverSelect(
-            $browser->driver()->findElement(
-                WebDriverBy::id("optin-country_id")
-            )
-        );
-        $select->selectByVisibleText(strtoupper($person->address->country));
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("address1"),
-            sprintf('%s %s',
-                $person->address->street_number,
-                $person->address->route
-            )
-        );
-        $browser->addContentToFormField(
-            WebDriverBy::id("city"),
-            $person->address->locality
-        );
-
-        $aalid  = strtoupper($person->address->country) == "UNITED STATES" ? "optin-state_id" : "optin-province";
-
-        if(strtoupper($person->address->country) == "UNITED STATES") {
-            $select = new WebDriverSelect(
-                $browser->driver()->findElement(
-                    WebDriverBy::id($aalid)
-                )
-            );
-            $select->selectByVisibleText($person->address->administrative_area_level_1);
-        } else {
-            $browser->addContentToFormField(
-                WebDriverBy::id($aalid),
-                $person->address->administrative_area_level_1
-            );
-        }
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("zip"),
-            $person->address->postal_code
-        );
-
-    }
-
-    public static function fillOutCreditCardFormDetails(HBIPerson $person, HBIBrowser $browser)
-    {
-        try {
-            $browser->addContentToFormField(
-                WebDriverBy::id("cc_first_name"),
-                $person->name
-            );
-
-            $browser->addContentToFormField(
-                WebDriverBy::id("cc_last_name"),
-                $person->surname
-            );
-        } finally {
-            // Something
-        }
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("cc_number"),
-            $person->card->number
-        );
-
-        $browser->addContentToFormField(
-            WebDriverBy::id("cc_cvv"),
-            $person->card->cvv
-        );
-
-        list($year, $month, $day) = explode('-', $person->card->expiration);
-
-        $select = new WebDriverSelect(
-            $browser->driver()->findElement(
-                WebDriverBy::id("cc_month")
-            )
-        );
-        $select->selectByValue($month);
-
-        $select = new WebDriverSelect(
-            $browser->driver()->findElement(
-                WebDriverBy::id("cc_year")
-            )
-        );
-        $select->selectByValue($year);
-
-    }
-
     public static function createRandomPhoneNumber()
     {
         $number = rand(1111111111, 9999999999);
@@ -368,17 +239,13 @@ class Helpers
         return SELF::formatPhoneNumber($number, $mask);
     }
 
-    /*********************************************************************/
-    /*   Purpose: Return either masked phone number or false             */
-    /*     Masks: Val=1 or xxx xxx xxxx                                             */
-    /*            Val=2 or xxx xxx.xxxx                                             */
-    /*            Val=3 or xxx.xxx.xxxx                                             */
-    /*            Val=4 or (xxx) xxx xxxx                                           */
-    /*            Val=5 or (xxx) xxx.xxxx                                           */
-    /*            Val=6 or (xxx).xxx.xxxx                                           */
-    /*            Val=7 or (xxx) xxx-xxxx                                           */
-    /*            Val=8 or (xxx)-xxx-xxxx                                           */
-    /*********************************************************************/
+    /**
+     * [formatPhoneNumber description]
+     * @param  [type] $number [description]
+     * @param  [type] $mask   [description]
+     * @return [type]         [description]
+     * TODO: Fix \n (return) issue
+     */
     public static function formatPhoneNumber($number, $mask)
     {
         // $val_num = SELF::validatePhoneNumber( $number );
@@ -387,49 +254,49 @@ class Helpers
         if(!$val_num && !is_string ( $number ) ) {
             echo "Number $number is not a valid phone number! \n";
             return false;
-        }   // end if !$val_num
+        }
 
         if(( $mask == 1 ) || ( $mask == 'xxx xxx xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
                     '$1 $2 $3'." \n", $number);
             return $phone;
-        }   // end if $mask == 1
+        }
 
         if(( $mask == 2 ) || ( $mask == 'xxx xxx.xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
                     '$1 $2.$3'." \n", $number);
             return $phone;
-        }   // end if $mask == 2
+        }
 
         if(( $mask == 3 ) || ( $mask == 'xxx.xxx.xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
                     '$1.$2.$3'." \n", $number);
             return $phone;
-        }   // end if $mask == 3
+        }
 
         if(( $mask == 4 ) || ( $mask == '(xxx) xxx xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
                     '($1) $2 $3'." \n", $number);
             return $phone;
-        }   // end if $mask == 4
+        }
 
         if(( $mask == 5 ) || ( $mask == '(xxx) xxx.xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
                     '($1) $2.$3'." \n", $number);
             return $phone;
-        }   // end if $mask == 5
+        }
 
         if(( $mask == 6 ) || ( $mask == '(xxx).xxx.xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
                     '($1).$2.$3'." \n", $number);
             return $phone;
-        }   // end if $mask == 6
+        }
 
         if(( $mask == 7 ) || ( $mask == '(xxx) xxx-xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
                     '($1) $2-$3'." \n", $number);
             return $phone;
-        }   // end if $mask == 7
+        }
 
         if(( $mask == 8 ) || ( $mask == '(xxx)-xxx-xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
@@ -440,17 +307,11 @@ class Helpers
         return false;
     }
 
-    /*********************************************************************/
-    /*   Purpose:   To determine if the passed string is a valid phone  */
-    /*              number following one of the establish formatting        */
-    /*                  styles for phone numbers.  This function also breaks    */
-    /*                  a valid number into it's respective components of:      */
-    /*                          3-digit area code,                                      */
-    /*                          3-digit exchange code,                                  */
-    /*                          4-digit subscriber number                               */
-    /*                  and validates the number against 10 digit US NANPA  */
-    /*                  guidelines.                                                         */
-    /*********************************************************************/
+    /**
+     * [validatePhoneNumber description]
+     * @param  [type] $phone [description]
+     * @return [type]        [description]
+     */
     public static function validatePhoneNumber($phone)
     {
         $format_pattern =   '/^(?:(?:\((?=\d{3}\)))?(\d{3})(?:(?<=\(\d{3})\))'.
@@ -519,6 +380,11 @@ class Helpers
         return $valid['all'];
     }
 
+    /**
+     * [getPriceFromString description]
+     * @param  [type] $string [description]
+     * @return [type]         [description]
+     */
     public static function getPriceFromString($string)
     {
         preg_match('/\$([0-9]+[\.]*[0-9]*)/', $string, $match);
@@ -526,6 +392,10 @@ class Helpers
         return $match[1];
     }
 
+    /**
+     * [verifyTotals description]
+     * @return [type] [description]
+     */
     public static function verifyTotals()
     {
         // summary-subtotal
@@ -534,16 +404,16 @@ class Helpers
         // summary-total
     }
 
+    /**
+     * [testifyPersonDetails description]
+     * @param  HBIPerson &$person [description]
+     * @param  string    $prefix  [description]
+     * @return [type]             [description]
+     */
     public static function testifyPersonDetails(HBIPerson &$person, $prefix="TEST-")
     {
         $person->name    = sprintf('%s%s', $prefix, $person->name);
         $person->surname = sprintf('%s%s', $prefix, $person->surname);
         $person->email   = sprintf('%s%s', $prefix, $person->email);
     }
-
-    public static function getListOfFunnels()
-    {
-
-    }
-
 }

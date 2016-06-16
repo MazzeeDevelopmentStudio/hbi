@@ -28,11 +28,22 @@ class HBILog
         $this->logfile = sprintf('%s/%s.json', $dir, $id);
     }
 
-    public function foo()
+    public function writeToMonoLog()
     {
         $log = new \Monolog\Logger('name');
         $log->pushHandler(new Monolog\Handler\StreamHandler('app.log', Monolog\Logger::WARNING));
         $log->addWarning('Foo');
+    }
+
+    public function writeExceptionToLogFile($exception, $e)
+    {
+        $content = array(
+            "Exception"=>"Exception Thrown: $exception",
+            print_r($e, true)
+        );
+
+        print("Exception: $exception".PHP_EOL);
+        $this->writeToLogFile($content);
     }
 
     public function writeToLogFile($content)

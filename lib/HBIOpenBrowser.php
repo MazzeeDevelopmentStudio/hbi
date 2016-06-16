@@ -111,9 +111,16 @@ class HBIOpenBrowser
         $el->click();
     }
 
+    public function waitForElementToBeClickable(WebDriverBy $by)
+    {
+        $this->_driver->wait(20, 50)->until(
+            WebDriverExpectedCondition::elementToBeClickable($by)
+        );
+    }
+
     public function waitForElement(WebDriverBy $by)
     {
-        $this->_driver->wait(20, 1000)->until(
+        $this->_driver->wait(20, 50)->until(
             WebDriverExpectedCondition::visibilityOfElementLocated($by)
         );
     }

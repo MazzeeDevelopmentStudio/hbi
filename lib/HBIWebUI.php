@@ -64,6 +64,12 @@ class HBIWebUI
         $field->sendKeys($fieldvalue);
     }
 
+    /**
+     * [enterFieldData description]
+     * @param  WebDriverBy $by    [description]
+     * @param  [type]      $value [description]
+     * @return [type]             [description]
+     */
     public function enterFieldData(WebDriverBy $by, $value)
     {
         $field = $this->_driver->findElement($by);
@@ -87,11 +93,11 @@ class HBIWebUI
 
     /**
      * [setSelectValue description]
+     * @param WebDriverBy $by    [description]
+     * @param [type]      $value [description]
      */
     public function setSelectValue(WebDriverBy $by, $value)
     {
-        // print_r($by);
-
         $element = $this->_driver->findElement($by);
         $element->getLocationOnScreenOnceScrolledIntoView();
 
@@ -106,6 +112,11 @@ class HBIWebUI
 
     }
 
+    /**
+     * [getOptions description]
+     * @param  WebDriverBy $by [description]
+     * @return [type]          [description]
+     */
     public function getOptions(WebDriverBy $by)
     {
         $select = $this->_driver->findElement($by);
@@ -114,6 +125,11 @@ class HBIWebUI
         return $wds->getOptions();
     }
 
+    /**
+     * [getHiddenOptions description]
+     * @param  [type] $elementId [description]
+     * @return [type]            [description]
+     */
     public function getHiddenOptions($elementId)
     {   $script = "
             var texts = [];
@@ -131,6 +147,10 @@ class HBIWebUI
         return $results;
     }
 
+    /**
+     * [getPageDataPoints description]
+     * @return [type] [description]
+     */
     public function getPageDataPoints()
     {
         $script  = 'return {
@@ -145,6 +165,10 @@ class HBIWebUI
         return (object)$results;
     }
 
+    /**
+     * [logConsoleMessages description]
+     * @return [type] [description]
+     */
     public function logConsoleMessages()
     {
         $script = "
@@ -217,30 +241,56 @@ class HBIWebUI
         // $cssClass = "div.dataTables_paginate.paging_simple_numbers";
         $cssClass = "table.dataTable tbody tr.odd";
 
-        $this->_driver->wait(20, 1000)->until(
+        $this->_driver->wait(20, 250)->until(
             WebDriverExpectedCondition::presenceOfElementLocated(
                 WebDriverBy::cssSelector($cssClass)
             )
         );
     }
 
+    /**
+     * [refreshPage description]
+     * @return [type] [description]
+     */
     public function refreshPage()
     {
         $this->_driver->navigate()->refresh();
     }
 
+    /**
+     * [getSaveNotificationResult description]
+     * @return [type] [description]
+     */
     public function getSaveNotificationResult()
     {
 
     }
 
+    /**
+     * [changeFieldFocus description]
+     * @return [type] [description]
+     */
     public function changeFieldFocus()
     {
-        // $rem = new RemoteExecuteMethod($this->_driver);
-        // $kb = new RemoteKeyboard($rem);
-
         $kb = $this->_driver->getKeyboard();
         $kb->sendKeys("\xEE\x80\x8C");
+    }
 
+    /**
+     * [setCheckBoxCheckedState description]
+     * @param WebDriverBy $by    [description]
+     * @param [type]      $state [description]
+     */
+    public function setCheckBoxCheckedState(WebDriverBy $by, $state)
+    {
+      $el = $this->_driver->findElement($by);
+
+      if($el->isSelected() !== $state) {
+        $lel = $this->_driver->findElement(
+          WebDriverBy::cssSelector( sprintf('label[for=%s]', $el->getAttribute("id")) )
+        );
+
+        $lel->click();
+      }
     }
 }

@@ -157,7 +157,7 @@ class HBIAddPerson extends Actions
         $this->browser->webui()->clickButton('.btn.btn-primary.btn-xs.pull-right.mb20');
 
         // Check to see if the element is visible
-        $this->browser->driver()->wait(5, 1000)->until(
+        $this->browser->driver()->wait(20, 250)->until(
             WebDriverExpectedCondition::visibilityOfElementLocated(
                 WebDriverBy::cssSelector('.people-add-modal-panel')
             )

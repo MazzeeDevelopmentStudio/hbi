@@ -6,6 +6,12 @@ namespace HBI;
  */
 class HBIHelper
 {
+    /**
+     * [createRandomEmail description]
+     * @param  [type]  $person  [description]
+     * @param  boolean $obscure [description]
+     * @return [type]           [description]
+     */
     public static function createRandomEmail($person, $obscure = false)
     {
         $email = "TEST_BROKEN_EMAIL@scoutpup.com";
@@ -21,6 +27,11 @@ class HBIHelper
 
     }
 
+    /**
+     * [createPassword description]
+     * @param  integer $length [description]
+     * @return [type]          [description]
+     */
     public static function createPassword($length = 6)
     {
         $pwd = bin2hex(openssl_random_pseudo_bytes($length));
@@ -28,6 +39,11 @@ class HBIHelper
         return $pwd;
     }
 
+    /**
+     * [randItemFromJsonFile description]
+     * @param  [type] $file [description]
+     * @return [type]       [description]
+     */
     public static function randItemFromJsonFile($file) {
         $maxLineLength = 4096;
         $handle        = @fopen($file, "r");
@@ -88,11 +104,19 @@ class HBIHelper
         return $resultSet;
     }
 
+    /**
+     * [getPageObjectFromApi description]
+     * @return [type] [description]
+     */
     public static function getPageObjectFromApi()
     {
         // http://dev.losethebackpain.com/api/funnel/get-funnel-page
     }
 
+    /**
+     * [getProductObjectFromApi description]
+     * @return [type] [description]
+     */
     public static function getProductObjectFromApi()
     {
         // We are especially looking for shipping rates
@@ -127,16 +151,22 @@ class HBIHelper
         return $json;
     }
 
+    /**
+     * [getCollectionOfFunnels description]
+     * @return [type] [description]
+     */
     public static function getCollectionOfFunnels()
     {
+        // TODO: Waiting on bug fix for Presell Integration
         $ptyp = array(
-            "SalesPage",
-            "Presell"
+            "SalesPage"
+            // "Presell"
             );
 
         $json = HBIHelper::getDataFromHBICoreAPI(
                     'api/funnel/get-funnel-pages'
                 );
+
         $obj  = (object)$json;
         $f    = json_decode($obj->scalar);
         $fnls = array();
@@ -150,6 +180,10 @@ class HBIHelper
         return $fnls;
     }
 
+    /**
+     * [getListOfFunnelIds description]
+     * @return [type] [description]
+     */
     public static function getListOfFunnelIds()
     {
         $json = HBIHelper::getDataFromHBICoreAPI(
@@ -162,13 +196,16 @@ class HBIHelper
 
         foreach ($f->funnels as $funnel) {
             $fids[] = $funnel->id;
-
-            // print_r($funnel);
         }
 
         return $fids;
     }
 
+    /**
+     * [getListOfFunnelStageIds description]
+     * @param  [type] $fid [description]
+     * @return [type]      [description]
+     */
     public static function getListOfFunnelStageIds($fid)
     {
         $json = HBIHelper::getDataFromHBICoreAPI(
@@ -186,6 +223,12 @@ class HBIHelper
         return $sids;
     }
 
+    /**
+     * [getListofFunnelPageDetails description]
+     * @param  [type] $fid [description]
+     * @param  [type] $sid [description]
+     * @return [type]      [description]
+     */
     public static function getListofFunnelPageDetails($fid, $sid)
     {
         $json = HBIHelper::getDataFromHBICoreAPI(
@@ -195,14 +238,6 @@ class HBIHelper
         $obj  = (object)$json;
         $p    = json_decode($obj->scalar);
 
-        print_r($p);
-
         return null;
-
     }
-
-// Street Number      = div.pac-container div.pac-item span.pac-item-query span.pac-matched
-// Street Name        = div.pac-container div.pac-item span span.pac-matched
-// City,State,Country = div.pac-container div.pac-item span
-
 }

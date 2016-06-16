@@ -137,7 +137,7 @@ class HBIPanel
         // Message TEXT: div.gritter-item div.gritter-with-image p
 
         try {
-            $this->_driver->wait(20, 1000)->until(
+            $this->_driver->wait(20, 250)->until(
                 WebDriverExpectedCondition::presenceOfElementLocated(
                     WebDriverBy::cssSelector($messageBx)
                 )

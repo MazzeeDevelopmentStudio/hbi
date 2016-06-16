@@ -2,6 +2,7 @@
 namespace HBI;
 
 use HBI\Exception\AutomationException;
+use HBI\HBIBrowserList;
 
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -24,11 +25,16 @@ class HBIBrowser
     private $_window;
     private $_panel;
     private $_webui;
+    public  $browserList;
 
     private $_browsers;
 
     function __construct($hub, $browser = "firefox")
     {
+        if(!defined(PLATFORMBROWSERLIST)) {
+            $bl = new HBIBrowserList();
+        }
+
         if($browser == 'random') {
             $browser = $this->setRandomBrowser();
         }
@@ -38,6 +44,8 @@ class HBIBrowser
         $this->_window       = New WebDriverWindow($this->_driver);
         $this->_panel        = new HBIPanel($this->_driver);
         $this->_webui        = new HBIWebUI($this->_driver);
+
+
     }
 
     function __destruct()
@@ -100,57 +108,16 @@ class HBIBrowser
         return $dimensions;
     }
 
-    public function setRandomBrowser()
+    /**
+     * [setRandomBrowser description]
+     */
+    private function setRandomBrowser()
     {
-        $browsers = $this->getBrowserList();
-        shuffle($browsers);
+        $p = $GLOBALS['platfrm'] ? $GLOBALS['platfrm'] : array_rand(SELENIUMHUB);
 
-        // TODO: We should cache known available
-        // Browsers so we don't have to do this for
-        // each loop
-
-        foreach ($browsers as $b) {
-            $dc = DesiredCapabilities::$b();
-            try{
-                $driver = RemoteWebDriver::create(SELENIUMHUB, $dc, 5000);
-                $driver->quit();
-
-                unset($driver);
-            } catch(WebDriverException $e) {
-                // error_log( sprintf('Browser is not valid: %s %s %s', $b, PHP_EOL, print_r($e,true)) );
-                continue;
-            }
-
-            return $b;
-        }
-
-        // We will always require firefox... so this is the safest
-        // fall back (unless we start throwing an exception)
-        return 'firefox';
+        return array_rand(PLATFORMBROWSERLIST[$p]);
     }
 
-    public function getBrowserList()
-    {
-        $browsers = array(
-                        'chrome',
-                        'chrome',
-                        'chrome',
-                        'firefox',
-                        'opera'
-                        // 'safari',
-                        // 'safari',
-                        // 'safari',
-                        // 'safari',
-                        // 'safari',
-                        // 'safari',
-                        // 'safari'
-                        // 'internetExplorer',
-                        // 'phantomjs'
-                    );
-
-        return $browsers;
-
-    }
 
     public function maximizeWindow()
     {
@@ -199,9 +166,16 @@ class HBIBrowser
 
     }
 
+    public function waitForElementToBeClickable(WebDriverBy $by)
+    {
+        $this->_driver->wait(5, 10)->until(
+            WebDriverExpectedCondition::elementToBeClickable($by)
+        );
+    }
+
     public function waitForElement(WebDriverBy $by)
     {
-        $this->_driver->wait(20, 1000)->until(
+        $this->_driver->wait(5, 1000)->until(
             WebDriverExpectedCondition::visibilityOfElementLocated($by)
         );
     }
