@@ -33,16 +33,32 @@ class HBIWebUI
      * [clickButton description]
      * @param  [type] $selector [description]
      * @return [type]           [description]
+     * TODO: Pass "WebDriverBy" not Selector string
      */
-    public function clickButton($selector)
+    public function clickButton(WebDriverBy $by)
     {
-        $btn = $this->_driver->findElement(
-          WebDriverBy::cssSelector($selector)
-        );
         try {
+            print("ACTION   : Looking for button".PHP_EOL);
+            $btn = $this->_driver->findElement($by);
+            print("ACTION   : Found button".PHP_EOL);
+            $btn->getLocationOnScreenOnceScrolledIntoView();
+            print("ACTION   : Scrolled to button".PHP_EOL);
+            print("ACTION   : Waiting for button to be clickable".PHP_EOL);
+            $this->_driver->wait(20, 250)->until(
+                WebDriverExpectedCondition::elementToBeClickable($by)
+            );
+            print("ACTION   : Button is now clickable".PHP_EOL);
             $btn->click();
+            print("ACTION   : Clicked button".PHP_EOL);
+        } catch (NoSuchElementException $e) {
+            // Should we make sure page has not changed?
+            // print("EXCEPTION: NoSuchElementException [Button could not be found]".PHP_EOL);
+            // throw new NoSuchElementException("Button was not found", 1);
+            return false;
         } catch (UnknownServerException $e) {
+            // print("EXCEPTION: UnknownServerException [Button could not be clicked]".PHP_EOL);
             // throw new AutomationException("Element is not clickable");
+            return false;
         }
 
     }
@@ -100,6 +116,10 @@ class HBIWebUI
     {
         $element = $this->_driver->findElement($by);
         $element->getLocationOnScreenOnceScrolledIntoView();
+
+        $this->_driver->wait(20, 250)->until(
+            WebDriverExpectedCondition::elementToBeClickable($by)
+        );
 
         $select = new WebDriverSelect($element);
 

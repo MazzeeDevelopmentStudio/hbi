@@ -42,7 +42,7 @@ class HBILog
             print_r($e, true)
         );
 
-        print("Exception: $exception".PHP_EOL);
+        print("EXCEPTION: $exception".PHP_EOL);
         $this->writeToLogFile($content);
     }
 

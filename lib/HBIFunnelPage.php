@@ -6,7 +6,9 @@ use HBI\Funnel\PgDataObject;
 use HBI\Funnel\Helpers;
 
 use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
+use \Facebook\WebDriver\Exception\TimeOutException;
 
 /**
 *
@@ -37,6 +39,7 @@ class HBIFunnelPage
      */
     public function initiateNewPage()
     {
+        print("FUNCTION : initiateNewPage".PHP_EOL);
         if($this->isSamePageObject()
             && ($this->page->pageId == $this->funnelPage->page->id)) {
             return;
@@ -61,6 +64,8 @@ class HBIFunnelPage
      */
     private function isSamePageObject()
     {
+        print("FUNCTION : isSamePageObject".PHP_EOL);
+
         $pg = $this->browser->webui()->getPageDataPoints();
 
         if(!isset($this->page->pageId)) {return false;}
@@ -74,6 +79,8 @@ class HBIFunnelPage
      */
     private function isNewPageObject()
     {
+        print("FUNCTION : isNewPageObject".PHP_EOL);
+
         $pg = $this->browser->webui()->getPageDataPoints();
 
         return $this->page->pageId == $pg->pageId ? false : true;
@@ -84,11 +91,13 @@ class HBIFunnelPage
      */
     private function setPageDataObject()
     {
+        print("FUNCTION : setPageDataObject".PHP_EOL);
+
         $pg         = json_encode($this->browser->webui()->getPageDataPoints());
         $this->page = new PgDataObject( $pg );
 
         // DEBUG OUTPUT
-        print("Page     : ".json_encode($this->page).PHP_EOL);
+        print("PAGE     : ".json_encode($this->page).PHP_EOL);
         $this->hbilog->writeToLogFile(array("page"=>$this->page));
 
         unset($pg);
@@ -101,6 +110,8 @@ class HBIFunnelPage
      */
     public function processPage(HBIPerson $person)
     {
+        print("FUNCTION : processPage".PHP_EOL);
+
         $ret      = false;
 
         if(SELF::isNewPageObject()) {
@@ -152,8 +163,11 @@ class HBIFunnelPage
      */
     public function processSalesPageForm(HBIPerson $person)
     {
+        print("FUNCTION : processSalesPageForm".PHP_EOL);
+
         $id = null;
         try {
+            print("ACTION   : Getting Form ID".PHP_EOL);
             $el      = $this->browser->driver()->findElement(
                 WebDriverBy::cssSelector("form")
             );
@@ -166,14 +180,26 @@ class HBIFunnelPage
         } catch (NoSuchElementException $e) {
             $formType = "checkoutsubmit";
         }
+        print("SETTING  : FormType to '$formType'".PHP_EOL);
 
         // If we are a modal form or click to form, then we want to click
         // on the purchase button to invoke the form (optinform is already
         // visible on the page)
         if($id != 'optinform') {
-            $this->browser->webui()->clickButton("div.purchase-button");
+            print("ACTION   : Sending Click Request for 'div.purchase-button'".PHP_EOL);
+            try {
+                $this->browser->webui()->clickButton(
+                    WebDriverBy::cssSelector("div.purchase-button")
+                );
+            } catch (NoSuchElementException $e) {
+                // The only valid reason for this is because
+                // we already clicked it. So we make sure
+                // Out page has not changed
+                $this->initiateNewPage();
+            }
         }
 
+        // TODO: Wait for form to show
         // If the form is optinformodal, then we specificly get the modal ID
         // and see if its now visible
         if($id == 'optinformodal') {
@@ -184,12 +210,22 @@ class HBIFunnelPage
             $mt  = str_replace("#", null, $mel->getAttribute("href"));
 
             // Check if form modal is now visible
-            $this->browser->waitForElement(
-                WebDriverBy::id($mt)
+            // $this->browser->waitForElement(
+            //     WebDriverBy::id($mt)
+            // );
+
+            $formel = $this->browser->driver()->findElement(
+              WebDriverBy::id($mt)
+            );
+
+            print("ACTION   : Waiting for Form ID $mt to be visible".PHP_EOL);
+            $this->browser->driver()->wait(5, 250)->until(
+                WebDriverExpectedCondition::visibilityOf($formel)
             );
 
         } elseif($formType == "checkoutsubmit") {
             // Wait for form to be useable
+            print("ACTION   : Waiting for FormType $formType".PHP_EOL);
             $this->browser->waitForElement(
                 WebDriverBy::cssSelector("form.".$formType)
             );
@@ -198,11 +234,43 @@ class HBIFunnelPage
 
         $ret = $this->processFunnelForm($person);
 
+        $possbileButtons = array("submitcheckoutform","submit");
+
+        // Which button do we have?
+        $i       = 0;
+        $located = null;
+        while (!$located && $i<count($possbileButtons)) {
+            print("ACTION   : Search for '$possbileButtons[$i]'".PHP_EOL);
+            try {
+                $located = $this->browser->driver()->findElement(
+                    WebDriverBy::id($possbileButtons[$i])
+                );
+                print(sprintf("LOCATED  : %s".PHP_EOL, $located->getAttribute('id')));
+            } catch (NoSuchElementException $e) {
+                print("ALERT    : The button $possbileButtons[$i] was not found".PHP_EOL);
+                $i++;
+            }
+        }
+
+        if( $located ) {
+            print("ACTION   : Sending Click Request for '$possbileButtons[$i]'".PHP_EOL);
+            $this->browser->webui()->clickButton(
+                WebDriverBy::id($possbileButtons[$i])
+            );
+
+        }
+
+        // div#processingmodal
+        // div.processingmodaltext
         try {
-            $this->browser->webui()->clickButton("#submit");
-            // We know to wait for page title
-        } catch (NoSuchElementException $e) {
-            // Do Nothing?
+            $this->browser->driver()->wait(15, 250)->until(
+                WebDriverExpectedCondition::invisibilityOfElementLocated(
+                    WebDriverBy::id('processingmodal')
+                )
+            );
+
+        } catch (TimeOutException $e) {
+
         }
 
         return $ret;
@@ -216,10 +284,41 @@ class HBIFunnelPage
      */
     public function processOrderForm(HBIPerson $person)
     {
+        print("FUNCTION : processOrderForm".PHP_EOL);
+
+        try {
+            $this->browser->driver()->wait(5, 250)->until(
+                WebDriverExpectedCondition::stalenessOf(
+                    $this->browser->driver()->findElement(
+                        WebDriverBy::id('processingmodal')
+                    )
+                )
+            );
+            print("ALERT    : Found Modal Windows at Function Start".PHP_EOL);
+
+            return true;
+
+        } catch (TimeOutException $e) {
+            // TODO: Should we do anything?
+        }
+
         // Wait for our Page Title
         $pgTitle = $this->page->pageName;
 
         $ret = $this->processFunnelForm($person);
+
+        if(isset($person->shipping)) {
+            try {
+                $this->browser->webui()->setCheckBoxCheckedState(
+                    WebDriverBy::id('shipping-sameas-billing'),
+                    0
+                );
+                $this->processFunnelForm($person->shipping, 'shipping');
+            } catch (NoSuchElementException $e) {
+                throw new AutomationException("Form is missing shipping-sameas-billing");
+            }
+        }
+
 
         $addOnIds = $this->getAddonsIdsForPage();
 
@@ -233,10 +332,26 @@ class HBIFunnelPage
             print(sprintf("Addon    : %s".PHP_EOL,$addon));
         }
 
+        $this->browser->driver()->takeScreenshot(
+            sprintf('%s/%s/%s_ORDERFORM_VIEW.png',
+            LOGSDIR, $GLOBALS['DATE'], $GLOBALS['SID'])
+        );
+
         // Submit Order
         $this->browser->clickElement(
             WebDriverBy::id("submitcheckoutform")
         );
+
+        try {
+            $this->browser->driver()->wait(15, 250)->until(
+                WebDriverExpectedCondition::invisibilityOfElementLocated(
+                    WebDriverBy::id('processingmodal')
+                )
+            );
+
+        } catch (TimeOutException $e) {
+
+        }
 
 
         return $ret;
@@ -249,8 +364,13 @@ class HBIFunnelPage
      * TODO: Check for Form Errors
      * TODO: Correct Form items & resubmit?
      */
-    public function processFunnelForm(HBIPerson $person)
+    public function processFunnelForm(HBIPerson $person, $filter=null)
     {
+        print("FUNCTION : processFunnelForm".PHP_EOL);
+
+        if($filter) {
+            print("FILTER   : $filter".PHP_EOL);
+        }
 
         $inputs = $this->browser->driver()->findElements(
             WebDriverBy::cssSelector('input[type="text"]')
@@ -274,6 +394,8 @@ class HBIFunnelPage
             $val    = array();
 
             if(!$field->isDisplayed()) {continue;}
+
+            if($filter && ($prefix != $filter)) {continue;}
 
             // An array means either a complex and/ a child object
             // at this stage we will only have one sub-level support
@@ -325,7 +447,7 @@ class HBIFunnelPage
 
         // TODO: remove sleep
         // print("SLEEPING!".PHP_EOL);
-        sleep(15);
+        // sleep(15);
 
         // Return False if form still incorrect
         // Return True if going to next step
@@ -340,6 +462,8 @@ class HBIFunnelPage
      */
     public function processFunnelUpsell()
     {
+        print("FUNCTION : processFunnelUpsell".PHP_EOL);
+
         // TODO: change sleep to a wait state on key data element
         // print("SLEEPING!".PHP_EOL);
         sleep(5);
@@ -357,6 +481,8 @@ class HBIFunnelPage
      */
     public function processFunnelDownsell()
     {
+        print("FUNCTION : processFunnelDownsell".PHP_EOL);
+
         SELF::processFunnelUpsell();
         return true;
     }
@@ -367,6 +493,8 @@ class HBIFunnelPage
      */
     public function getRequiredFormFields()
     {
+        print("FUNCTION : getRequiredFormFields".PHP_EOL);
+
         // TODO: This should go to the Helper Class
         // try {
             // $cssSlctr = 'label[for="'.$fid.'"] span.field-required';
@@ -387,6 +515,8 @@ class HBIFunnelPage
      */
     private function fieldKeyTranslationTable(String $lookup)
     {
+        print("FUNCTION : fieldKeyTranslationTable".PHP_EOL);
+
         $key = null;
 
         try {
@@ -405,6 +535,8 @@ class HBIFunnelPage
      */
     public function getFunnelPageOffers($pageId)
     {
+        print("FUNCTION : getFunnelPageOffers".PHP_EOL);
+
         $fpo = SELF::getFunnelPageObject($pageId);
 
         return $fpo->page->offers;
@@ -416,6 +548,8 @@ class HBIFunnelPage
      */
     public function processFunnelPresell()
     {
+        print("FUNCTION : processFunnelPresell".PHP_EOL);
+
         $this->hbilog->writeToLogFile( array("DEBUG"=>array($this->page,$this->funnelPage) ));
         print_r(array("DEBUG"=>array($this->page,$this->funnelPage)));
         return false;
@@ -428,6 +562,8 @@ class HBIFunnelPage
      */
     public function isRequiredFormField(WebDriverBy $by)
     {
+        print("FUNCTION : isRequiredFormField".PHP_EOL);
+
         try {
             $el  = $this->browser->driver()->findElement($by);
             return $el->getAttribute("data-tooltip");
@@ -442,6 +578,8 @@ class HBIFunnelPage
      */
     public function getAddonsIdsForPage()
     {
+        print("FUNCTION : getAddonsIdsForPage".PHP_EOL);
+
         $addOnIds = array();
         $fpg      = $this->funnelPage->page;
 

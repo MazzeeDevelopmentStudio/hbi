@@ -130,7 +130,8 @@ class HBIHelper
      */
     public static function getDataFromHBICoreAPI($api, $fields=array())
     {
-        $url  = sprintf('%s/%s', APISERVER, $api);
+        // $url  = sprintf('%s/%s', APISERVER, $api);
+        $url  = sprintf('%s/%s', CORESERVER['development'], $api);
         $qstr = 'key='.APIKEY;
 
         foreach($fields as $k => $v) {
@@ -147,6 +148,7 @@ class HBIHelper
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
         $json = curl_exec($ch);
+        // $json = file_get_contents($url . '?' . $qstr);
 
         return $json;
     }
@@ -163,6 +165,27 @@ class HBIHelper
             // "Presell"
             );
 
+        $json = HBIHelper::getDataFromHBICoreAPI(
+                    'api/funnel/get-funnel-pages'
+                );
+
+        $obj  = (object)$json;
+        $f    = json_decode($obj->scalar);
+        $fnls = array();
+
+        foreach ($f->pages as $page) {
+            if(in_array($page->stage->name,$ptyp)) {
+                $fnls[$page->stage->funnel_id][] = $page;
+            }
+        }
+
+        return $fnls;
+    }
+
+    public static function getCollectionOfFunnelsStartAtOrderForm()
+    {
+        // TODO: Waiting on bug fix for Presell Integration
+        $ptyp = array("OrderForm");
         $json = HBIHelper::getDataFromHBICoreAPI(
                     'api/funnel/get-funnel-pages'
                 );

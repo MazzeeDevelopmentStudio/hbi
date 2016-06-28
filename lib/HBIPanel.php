@@ -49,7 +49,9 @@ class HBIPanel
             $credentials['pass']
         );
 
-        $this->_webui->clickButton('button.btn.btn-success.btn-block');
+        $this->_webui->clickButton(
+            WebDriverBy::cssSelector('button.btn.btn-success.btn-block')
+        );
     }
 
     Public function logOut()
@@ -95,35 +97,41 @@ class HBIPanel
         $this->_cookies = $this->_driver->manage()->getCookies();
     }
 
-    public function clickNavigationItem($selector)
+    public function clickNavigationItem(WebDriverBy $by)
     {
-        $this->_webui->clickButton($selector);
+        $this->_webui->clickButton($by);
     }
 
-    public function clickSubNavigationItem($parent, $text)
+    public function clickSubNavigationItem($parentBy, $textBy)
     {
-        $el  = WebDriverBy::linkText($text);
-
         // We need to first check to see if the parent is already open
         // But until we get the rendered code fixed, we will just click
         // the dashboard view each time first.
-        $this->clickNavigationItem(".fa.fa-home");
+        $this->clickNavigationItem(
+            WebDriverBy::cssSelector(".fa.fa-home")
+        );
+
         // $element = $this->_driver->findElement($el);
         // if ($element->isDisplayed()) {
-            $this->clickNavigationItem($parent);
+        $this->clickNavigationItem(
+            // $parentBy
+            WebDriverBy::cssSelector($parentBy)
+        );
         // }
 
         // This is one area where we need to change how
         // we do the interfaces for the panel
-        $btn = $this->_driver->findElement(
-          $el
-        );
-        $btn->click();
+        $this->_driver
+                 ->findElement(
+                    // $textBy
+                    WebDriverBy::linkText($textBy)
+                )
+                 ->click();
     }
 
-    public function clickButtonElement($selector)
+    public function clickButtonElement(WebDriverBy $by)
     {
-        $this->_webui->clickButton($selector);
+        $this->_webui->clickButton($by);
     }
 
     public function waitForNotification()

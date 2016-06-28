@@ -23,11 +23,8 @@ class HBIBrowserList
 
     function __construct()
     {
-        // We never want to have this happen twice (no reason for it)
-        if(!defined('PLATFORMBROWSERLIST')) {
-            $this->createValidBrowserListByPlatform();
-            $this->setBrowserListToGlobal();
-        }
+        // We never want to have this happen twice
+        SELF::createValidBrowserListByPlatform();
     }
 
     function __destruct()
@@ -44,12 +41,11 @@ class HBIBrowserList
 
         foreach (PLATFORMS as $p => $pw) {
             foreach (BROWSERS as $b => $bw) {
-                if($this->isBrowserValid($b,$p)) {
-                    $list[$p][] = $b;
+                if(SELF::isBrowserValid($b,$p)) {
+                    $list[$p][$b] = $b;
                 }
             }
         }
-
         $this->browserList = $list;
     }
 
@@ -61,9 +57,10 @@ class HBIBrowserList
      */
     private function isBrowserValid($browserName, $platform)
     {
-        $dc = DesiredCapabilities::$browserName();
+        $dc  = DesiredCapabilities::$browserName();
+        $hub = isset( SELENIUMHUB[$platform] ) ?  SELENIUMHUB[$platform] : $platform;
         try{
-            $driver = RemoteWebDriver::create($platform, $dc, 5000);
+            $driver = RemoteWebDriver::create($hub, $dc, 5000);
             $driver->quit();
 
             unset($driver);
@@ -116,6 +113,6 @@ class HBIBrowserList
 
     private function setBrowserListToGlobal()
     {
-        define('PLATFORMBROWSERLIST', $this->browserList);
+        DEFINE("PLATFORMBROWSERLIST", $this->browserList);
     }
 }

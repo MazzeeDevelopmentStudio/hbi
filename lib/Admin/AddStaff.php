@@ -29,9 +29,7 @@ class AddStaff extends AddPerson
      */
     function __construct(HBIBrowser $browser, $person=null, $type=null)
     {
-
-        parent::__construct();
-        $this->person->type = staff;
+        parent::__construct($browser, $person, $type);
     }
 
     /**
@@ -44,9 +42,24 @@ class AddStaff extends AddPerson
         $this->addPersonDataToForm();
         $this->clickSaveButton();
 
-        $notification = $this->browser->panel()->waitForNotification();
+        // ??????
+        // $notification = $this->browser->panel()->waitForNotification();
 
         $this->clickDoneButton();
     }
+
+    /**
+     * [defineRandomPersonType description]
+     * @return [type] [description]
+     */
+    protected function defineRandomPersonType()
+    {
+        $options = $this->browser->webui()->getHiddenOptions("s2id_user_types[]");
+        $rand    = rand(0, count($options)-1);
+
+        return $options[$rand];
+    }
+
+
 
 }

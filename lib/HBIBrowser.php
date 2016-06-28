@@ -31,10 +31,6 @@ class HBIBrowser
 
     function __construct($hub, $browser = "firefox")
     {
-        if(!defined(PLATFORMBROWSERLIST)) {
-            $bl = new HBIBrowserList();
-        }
-
         if($browser == 'random') {
             $browser = $this->setRandomBrowser();
         }
@@ -113,9 +109,10 @@ class HBIBrowser
      */
     private function setRandomBrowser()
     {
-        $p = $GLOBALS['platfrm'] ? $GLOBALS['platfrm'] : array_rand(SELENIUMHUB);
+        $p   = $GLOBALS['platfrm'] ? $GLOBALS['platfrm'] : array_rand(SELENIUMHUB);
+        $pbl = PLATFORMBROWSERLIST;
 
-        return array_rand(PLATFORMBROWSERLIST[$p]);
+        return array_rand($pbl[$p]);
     }
 
 

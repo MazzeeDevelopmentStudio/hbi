@@ -64,7 +64,8 @@ class Helpers
      */
     public static function getShippingAddressDetails(HBIPerson $person)
     {
-        $isBillingTheSame = (bool)rand(0,1);
+        // $isBillingTheSame = (bool)rand(0,1);
+        $isBillingTheSame = 0;
 
         if($isBillingTheSame) {
             return $person;
@@ -258,49 +259,49 @@ class Helpers
 
         if(( $mask == 1 ) || ( $mask == 'xxx xxx xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
-                    '$1 $2 $3'." \n", $number);
+                    '$1 $2 $3', $number);
             return $phone;
         }
 
         if(( $mask == 2 ) || ( $mask == 'xxx xxx.xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
-                    '$1 $2.$3'." \n", $number);
+                    '$1 $2.$3', $number);
             return $phone;
         }
 
         if(( $mask == 3 ) || ( $mask == 'xxx.xxx.xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
-                    '$1.$2.$3'." \n", $number);
+                    '$1.$2.$3', $number);
             return $phone;
         }
 
         if(( $mask == 4 ) || ( $mask == '(xxx) xxx xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
-                    '($1) $2 $3'." \n", $number);
+                    '($1) $2 $3', $number);
             return $phone;
         }
 
         if(( $mask == 5 ) || ( $mask == '(xxx) xxx.xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
-                    '($1) $2.$3'." \n", $number);
+                    '($1) $2.$3', $number);
             return $phone;
         }
 
         if(( $mask == 6 ) || ( $mask == '(xxx).xxx.xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
-                    '($1).$2.$3'." \n", $number);
+                    '($1).$2.$3', $number);
             return $phone;
         }
 
         if(( $mask == 7 ) || ( $mask == '(xxx) xxx-xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
-                    '($1) $2-$3'." \n", $number);
+                    '($1) $2-$3', $number);
             return $phone;
         }
 
         if(( $mask == 8 ) || ( $mask == '(xxx)-xxx-xxxx' ) ) {
             $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
-                    '($1)-$2-$3'." \n", $number);
+                    '($1)-$2-$3', $number);
             return $phone;
         }
 

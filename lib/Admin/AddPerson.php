@@ -9,6 +9,7 @@ use HBI\HBIBrowser;
 use HBI\HBIPeople;
 use HBI\HBIHelper;
 use HBI\HBIAddresses;
+use HBI\HBIPerson;
 
 /**
  *
@@ -65,19 +66,30 @@ class AddPerson extends Actions
      * [defineRandomPerson description]
      * @return [type] [description]
      */
-    private function defineRandomPerson()
+    protected function defineRandomPerson()
     {
-        $people       = new HBIPeople;
-        $collection   = $people->buildCollection(1);
+        $ppl              = new HBIPeople();
+        $person           = $ppl->buildCollection(1);
+        $person->email    = HBIHelper::createRandomEmail(null, true);
+        $person->phone    = SELF::createRandomPhoneNumber();
+        $person->password = HBIHelper::createPassword(5);
 
-        return $collection;
+        $addr             = new HBIAddresses;
+        $person->address  = $addr->buildCollection(1);
+
+        unset($ppl);
+        unset($addr);
+
+        $this->testifyPersonDetails($person);
+
+        return $person;
     }
 
     /**
      * [defineRandomPersonType description]
      * @return [type] [description]
      */
-    private function defineRandomPersonType()
+    protected function defineRandomPersonType()
     {
         $options = $this->browser->webui()->getHiddenOptions("user_types[]");
         $rand    = rand(0, count($options)-1);
@@ -88,12 +100,9 @@ class AddPerson extends Actions
     /**
      * [addPersonDataToForm description]
      */
-    private function addPersonDataToForm()
+    protected function addPersonDataToForm()
     {
         $this->setAccessLevel($this->person->type);
-
-        $this->person->email    = HBIHelper::createRandomEmail($this->person);
-        $this->person->password = HBIHelper::createPassword(5);
 
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("first_name"),
@@ -116,14 +125,13 @@ class AddPerson extends Actions
     /**
      * [addContactInfoToForm description]
      */
-    private function addContactInfoToForm()
+    protected function addContactInfoToForm()
     {
-        // Create New Contact Info
-        $addresses  = new HBIAddresses;
-        $collection = $addresses->buildCollection(1);
-        $addr       = $collection;
+        print_r($this->person);
+        $addr       = $this->person->address;
 
         $this->setContactState($addr->administrative_area_level_1);
+        $this->setContactCountry($addr->country);
 
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("addresses[0][address1]"),
@@ -144,7 +152,7 @@ class AddPerson extends Actions
      * @param  [type] $tabname [description]
      * @return [type]          [description]
      */
-    private function clickTab($tabname)
+    protected function clickTab($tabname)
     {
         $this->browser->webui()->clickTab($tabname);
     }
@@ -153,10 +161,12 @@ class AddPerson extends Actions
      * [openAddPanel description]
      * @return [type] [description]
      */
-    private function openAddPanel()
+    protected function openAddPanel()
     {
         // TODO: Add ID to "Add" button
-        $this->browser->webui()->clickButton('.btn.btn-primary.btn-xs.pull-right.mb20');
+        $this->browser->webui()->clickButton(
+            WebDriverBy::cssSelector('.btn.btn-primary.btn-xs.pull-right.mb20')
+        );
 
         // Check to see if the element is visible
         $this->browser->driver()->wait(20, 250)->until(
@@ -170,10 +180,12 @@ class AddPerson extends Actions
      * [clickSaveButton description]
      * @return [type] [description]
      */
-    private function clickSaveButton()
+    protected function clickSaveButton()
     {
         // TODO: Use Save button's ID
-        $this->browser->webui()->clickButton('.btn.btn-xs.btn-info.pull-right.mr20');
+        $this->browser->webui()->clickButton(
+            WebDriverBy::cssSelector('.btn.btn-xs.btn-info.pull-right.mr20')
+        );
         sleep(1);
     }
 
@@ -181,10 +193,12 @@ class AddPerson extends Actions
      * [clickDoneButton description]
      * @return [type] [description]
      */
-    private function clickDoneButton()
+    protected function clickDoneButton()
     {
         // TODO: Add ID to "Done" button
-        $this->browser->webui()->clickButton(".btn.btn-default.btn-xs.pull-right.dismissButton");
+        $this->browser->webui()->clickButton(
+            WebDriverBy::cssSelector(".btn.btn-default.btn-xs.pull-right.dismissButton")
+        );
         sleep(1);
     }
 
@@ -192,7 +206,7 @@ class AddPerson extends Actions
      * [setAccessLevel description]
      * @param [type] $level [description]
      */
-    private function setAccessLevel($level)
+    protected function setAccessLevel($level)
     {
         $this->browser->webui()->clearField("s2id_autogen1","id");
         $this->browser->webui()->removeInputedValue("a.select2-search-choice-close", "cssSelector");
@@ -200,14 +214,16 @@ class AddPerson extends Actions
             WebDriverBy::id("s2id_autogen1"),
             $level
         );
-        $this->browser->webui()->clickButton(".select2-match");
+        $this->browser->webui()->clickButton(
+            WebDriverBy::cssSelector(".select2-match")
+        );
     }
 
     /**
      * [setContactState description]
      * @param [type] $state [description]
      */
-    private function setContactState($state)
+    protected function setContactState($state)
     {
         $this->browser->clickElement(
             WebDriverBy::id("select2-chosen-3")
@@ -218,16 +234,117 @@ class AddPerson extends Actions
             WebDriverBy::id("s2id_autogen3_search"),
             $state
         );
-        $this->browser->webui()->clickButton(".select2-match");
+        $this->browser->webui()->clickButton(
+            WebDriverBy::cssSelector(".select2-match")
+        );
+    }
+
+    protected function setContactCountry($country)
+    {
+        $this->browser->clickElement(
+            WebDriverBy::id("select2-chosen-2")
+        );
+        $this->browser->webui()->clearField("s2id_autogen2_search","id");
+
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id("s2id_autogen2_search"),
+            $country
+        );
+        $this->browser->webui()->clickButton(
+            WebDriverBy::cssSelector(".select2-match")
+        );
     }
 
     /**
      * [refreshPage description]
      * @return [type] [description]
      */
-    private function refreshPage()
+    protected function refreshPage()
     {
         $this->browser->webui()->refreshPage();
+    }
+
+    public static function createRandomPhoneNumber()
+    {
+        $number = rand(1111111111, 9999999999);
+        $mask   = rand(1,8);
+
+        return SELF::formatPhoneNumber($number, $mask);
+    }
+
+    /**
+     * [formatPhoneNumber description]
+     * @param  [type] $number [description]
+     * @param  [type] $mask   [description]
+     * @return [type]         [description]
+     * TODO: Fix \n (return) issue
+     */
+    public static function formatPhoneNumber($number, $mask)
+    {
+        // $val_num = SELF::validatePhoneNumber( $number );
+        $val_num = true;
+
+        if(!$val_num && !is_string ( $number ) ) {
+            echo "Number $number is not a valid phone number! \n";
+            return false;
+        }
+
+        if(( $mask == 1 ) || ( $mask == 'xxx xxx xxxx' ) ) {
+            $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
+                    '$1 $2 $3', $number);
+            return $phone;
+        }
+
+        if(( $mask == 2 ) || ( $mask == 'xxx xxx.xxxx' ) ) {
+            $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
+                    '$1 $2.$3', $number);
+            return $phone;
+        }
+
+        if(( $mask == 3 ) || ( $mask == 'xxx.xxx.xxxx' ) ) {
+            $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
+                    '$1.$2.$3', $number);
+            return $phone;
+        }
+
+        if(( $mask == 4 ) || ( $mask == '(xxx) xxx xxxx' ) ) {
+            $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
+                    '($1) $2 $3', $number);
+            return $phone;
+        }
+
+        if(( $mask == 5 ) || ( $mask == '(xxx) xxx.xxxx' ) ) {
+            $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
+                    '($1) $2.$3', $number);
+            return $phone;
+        }
+
+        if(( $mask == 6 ) || ( $mask == '(xxx).xxx.xxxx' ) ) {
+            $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
+                    '($1).$2.$3', $number);
+            return $phone;
+        }
+
+        if(( $mask == 7 ) || ( $mask == '(xxx) xxx-xxxx' ) ) {
+            $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
+                    '($1) $2-$3', $number);
+            return $phone;
+        }
+
+        if(( $mask == 8 ) || ( $mask == '(xxx)-xxx-xxxx' ) ) {
+            $phone = preg_replace('~.*(\d{3})[^\d]*(\d{3})[^\d]*(\d{4}).*~',
+                    '($1)-$2-$3', $number);
+            return $phone;
+        }
+
+        return false;
+    }
+
+    public static function testifyPersonDetails(HBIPerson &$person, $prefix="TEST-")
+    {
+        $person->name    = sprintf('%s%s', $prefix, $person->name);
+        $person->surname = sprintf('%s%s', $prefix, $person->surname);
+        $person->email   = sprintf('%s%s', $prefix, $person->email);
     }
 
 }
