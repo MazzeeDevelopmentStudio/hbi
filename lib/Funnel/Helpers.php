@@ -9,7 +9,7 @@ use HBI\HBIAddresses;
 use HBI\HBICreditCards;
 use HBI\HBICreditCardCreator;
 
-use \facebook\WebDriver\Exception\NoSuchElementException;
+use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Exception\UnknownServerException;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\WebDriverWindow;
@@ -64,8 +64,7 @@ class Helpers
      */
     public static function getShippingAddressDetails(HBIPerson $person)
     {
-        // $isBillingTheSame = (bool)rand(0,1);
-        $isBillingTheSame = 0;
+        $isBillingTheSame = (bool)rand(0,10);
 
         if($isBillingTheSame) {
             return $person;
@@ -417,4 +416,12 @@ class Helpers
         $person->surname = sprintf('%s%s', $prefix, $person->surname);
         $person->email   = sprintf('%s%s', $prefix, $person->email);
     }
+
+    public static function dollarsToFloat($dollars)
+    {
+        $fls = str_replace('$',NULL,$dollars);
+
+        return number_format((float)$fls, 2, '.', '');
+    }
+
 }

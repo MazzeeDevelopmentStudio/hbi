@@ -64,23 +64,6 @@ class HBIWebUI
     }
 
     /**
-     * DEPRECIATED
-     * [enterFieldData description]
-     * @param  [type] $fieldname  [description]
-     * @param  [type] $fieldvalue [description]
-     * @param  [type] $fieldby    [description]
-     * @return [type]             [description]
-     */
-    public function enterFieldData2($fieldname, $fieldvalue, $fieldby)
-    {
-        $field = $this->_driver->findElement(
-          WebDriverBy::$fieldby($fieldname)
-        );
-
-        $field->sendKeys($fieldvalue);
-    }
-
-    /**
      * [enterFieldData description]
      * @param  WebDriverBy $by    [description]
      * @param  [type]      $value [description]
@@ -88,6 +71,8 @@ class HBIWebUI
      */
     public function enterFieldData(WebDriverBy $by, $value)
     {
+        print("VALUE    : $value".PHP_EOL);
+
         $field = $this->_driver->findElement($by);
 
         $field->clear();

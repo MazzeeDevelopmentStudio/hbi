@@ -6,6 +6,7 @@ use HBI\Funnel\PgDataObject;
 use HBI\Funnel\Helpers;
 
 use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverElement;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Exception\TimeOutException;
@@ -18,7 +19,11 @@ class HBIFunnelPage
     private $browser;
     private $hbilog;
     private $page;
+    private $spf;
+    private $opf;
+
     public  $funnelPage;
+
 
     /**
      * [__construct description]
@@ -29,6 +34,9 @@ class HBIFunnelPage
     {
         $this->browser = $browser;
         $this->hbilog  = $hbilog;
+
+        $this->spf = array();
+        $this->opf = array();
 
         $this->initiateNewPage();
     }
@@ -133,7 +141,8 @@ class HBIFunnelPage
                 break;
 
             case 'ThankYou':
-                // We Return false because we are done;
+                // TODO: Grab the values and make sure correct
+                SELF::processFinalReceipt();
                 $ret = false;
                 break;
 
@@ -368,6 +377,8 @@ class HBIFunnelPage
     {
         print("FUNCTION : processFunnelForm".PHP_EOL);
 
+        // $this->page->stageType
+
         if($filter) {
             print("FILTER   : $filter".PHP_EOL);
         }
@@ -444,14 +455,6 @@ class HBIFunnelPage
                     break;
             }
         }
-
-        // TODO: remove sleep
-        // print("SLEEPING!".PHP_EOL);
-        // sleep(15);
-
-        // Return False if form still incorrect
-        // Return True if going to next step
-
 
         return true;
     }
@@ -590,6 +593,97 @@ class HBIFunnelPage
         }
 
         return $addOnIds;
+    }
+
+    public function processFinalReceipt()
+    {
+        print("FUNCTION : processFinalReceipt".PHP_EOL);
+        // Get Each Item of
+        // table.table-invoice tbody tr
+        // -- [0] = Item
+        // -- [1] = Qty
+        // -- [2] = Retail
+        // -- [3] = Price
+        // -- [4] = Total
+        //
+        // table.table-total tbody tr
+        // -- [0] = Label
+        // -- [1] = Value
+
+        $invCols = array('item','qty','retail','price','total');
+        $ttlCols = array('label','amount');
+        $invEls  = $this->browser->driver()->findElements(
+            WebDriverBy::cssSelector('table.table-invoice tbody tr td')
+        );
+        $ttlEls  = $this->browser->driver()->findElements(
+            WebDriverBy::cssSelector('table.table-total tbody tr td')
+        );
+
+        $i   = 0;
+        $tmp = array();
+        $inv = array();
+        $ttl = array();
+
+        foreach ($invEls as $el) {
+            $tmp[ $invCols[$i] ] = $el->getText();
+            if( $i++ >= count($invCols)-1 ) {
+                $inv[] = $tmp;
+                $tmp = array();
+                $i=0;
+            }
+        }
+
+        $tmp = array();
+        $i=0;
+
+        foreach ($ttlEls as $el) {
+            $tmp[ $ttlCols[$i] ] = $el->getText();
+            if( $i++ >= count($ttlCols)-1 ) {
+                $lbl = trim( str_replace( ":", null ,$tmp['label'] ));
+                $ttl[ $lbl ] = $tmp['amount'];
+                $tmp = array();
+                $i=0;
+            }
+        }
+
+        // Clean up the data so its more understandable
+        // Compare the values to what we recorded during the process
+        // Compare the values to the Offer Values
+
+
+        // Check to make sure values add up
+        // Validate Subtotal
+        $subTotal = 0;
+        foreach ($inv as $itm) {
+            $price     = Helpers::dollarsToFloat($itm['price']);
+            $total     = Helpers::dollarsToFloat($itm['total']);
+
+            $itemTotal = Helpers::dollarsToFloat( $itm['qty'] * $price );
+
+            if( $itemTotal !==  Helpers::dollarsToFloat($total) ) {
+                $this->hbilog->writeToLogFile(
+                    array('TEST-FAILURE' => array(
+                        "ORIGINAL CALCULATION"=>$itm['price'],
+                        "DYNAMIC CALCULATION"=>$itemTotal,
+                        "CALCULATION FORMULA"=> "floatval( ".$itm['qty']." * $price )"
+                    )
+                ));
+            }
+
+            $subTotal = Helpers::dollarsToFloat($subTotal+$itemTotal);
+        }
+
+        // TODO: Process this through a function
+        if($subTotal !== Helpers::dollarsToFloat($ttl['Sub Total'])) {
+            $this->hbilog->writeToLogFile( array('TEST-FAILURE'=>array("SUBTOTAL CALCULATION"=>$subTotal,'SUBTOTAL ON INVOICE'=>$ttl['Sub Total']) ));
+        }
+
+        // TODO: Process this through a function
+        // if( ($ttl['Sub Total'] + $ttl['Shipping'] + $ttl['Tax']) !== $ttl['TOTAL'] ) {
+        //     $this->hbilog->writeToLogFile( array('TEST-FAILURE'=>array("TOTALS CALCULATION"=>$ttl )));
+        // }
+
+        $this->hbilog->writeToLogFile( array($inv,$ttl) );
     }
 
 }

@@ -5,6 +5,11 @@ use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\FirePHPHandler;
 
+// TODO: We should have logging levels, using PHP Error like levesl.
+// This way we can have output for only those things we truly need... and 'debug'
+// levels when we need that
+
+
 /**
 *
 */

@@ -165,14 +165,14 @@ class HBIBrowser
 
     public function waitForElementToBeClickable(WebDriverBy $by)
     {
-        $this->_driver->wait(5, 10)->until(
+        $this->_driver->wait(10, 10)->until(
             WebDriverExpectedCondition::elementToBeClickable($by)
         );
     }
 
     public function waitForElement(WebDriverBy $by)
     {
-        $this->_driver->wait(5, 1000)->until(
+        $this->_driver->wait(10, 250)->until(
             WebDriverExpectedCondition::visibilityOfElementLocated($by)
         );
     }

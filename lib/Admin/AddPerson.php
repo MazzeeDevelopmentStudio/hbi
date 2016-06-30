@@ -21,6 +21,7 @@ class AddPerson extends Actions
     private $address;
     private $contact;
     private $financial;
+    private $log;
 
     /**
      * [__construct description]
@@ -31,6 +32,7 @@ class AddPerson extends Actions
     function __construct(HBIBrowser $browser, $person=null, $type=null)
     {
         $this->browser      = $browser;
+        $this->log          = $GLOBALS['HBILog'];
         $this->person       = !empty($person) ? $person : $this->defineRandomPerson();
         $this->person->type = !empty($type) ? $type : $this->defineRandomPersonType();
     }
@@ -82,6 +84,8 @@ class AddPerson extends Actions
 
         $this->testifyPersonDetails($person);
 
+        $this->log->writeToLogFile($person);
+
         return $person;
     }
 
@@ -106,11 +110,11 @@ class AddPerson extends Actions
 
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("first_name"),
-            "TEST-".$this->person->name
+            $this->person->name
         );
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("last_name"),
-            "TEST-".$this->person->surname
+            $this->person->surname
         );
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("emailnoprefill"),

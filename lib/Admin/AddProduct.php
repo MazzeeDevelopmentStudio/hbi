@@ -5,8 +5,10 @@ use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\WebDriverBy;
 
 use HBI\Admin\Actions;
+use HBI\Admin\Helpers;
 use HBI\HBIBrowser;
 use HBI\HBIHelper;
+use HBI\HBIProduct;
 use HBI\HBIProducts;
 
 /**
@@ -16,6 +18,7 @@ class AddProduct extends Actions
 {
     private $browser;
     private $product;
+    private $log;
 
     /**
      * [__construct description]
@@ -26,6 +29,7 @@ class AddProduct extends Actions
     function __construct(HBIBrowser $browser, $product=null)
     {
         $this->browser = $browser;
+        $this->log     = &$GLOBALS['HBILog'];
         $this->product = !empty($product) ? $product : $this->defineRandomProduct();
     }
 
@@ -38,40 +42,98 @@ class AddProduct extends Actions
         error_log( print_r($this->product, true) );
     }
 
+    public function add()
+    {
+        $this->openAddPanel();
+        $this->addProductDataToForm();
+
+        $this->clickSaveButton();
+        $this->clickDoneButton();
+    }
+
+    // TODO: We should just create very random data instead of
+    // relying on the json file
     public function defineRandomProduct()
     {
-        $product       = new HBIProducts;
-        $collection   = $product->buildCollection(1);
+        $prod    = new HBIProducts;
+        $product = $prod->buildCollection(1);
 
-        print_r($collection);
+        $this->testifyProductDetails($product);
 
-        return $collection;
+        $product->retail   = Helpers::getRandomDollarAmount();
+        $product->cogs     = Helpers::getRandomDollarAmount();
+        $product->category = Helpers::getRandomProductCategory($this->browser);
+        $product->type     = Helpers::getRandomProductType($this->browser);
+
+        $this->log->writeToLogFile($product);
+        print_r($product);
+
+        return $product;
 
     }
 
     public function openAddPanel()
     {
-        // There is a timing issue so we need to wait a second
-        sleep(1);
+        // Need to wait for button
+        $this->browser->waitForElement(
+            WebDriverBy::cssSelector('.btn.btn-primary.btn-xs.pull-right.mb20')
+        );
+
         // TODO: Add ID to "Add" button
-        $this->_webui->clickButton(
+        $this->browser->webui()->clickButton(
             WebDriverBy::cssSelector('.btn.btn-primary.btn-xs.pull-right.mb20')
         );
     }
 
     public function addProductDataToForm()
     {
-        $this->_webui->enterFieldData("sku", $this->_service->sku, "id");
-        $this->_webui->enterFieldData("name", $this->_service->name, "name");
-        $this->_webui->enterFieldData("description", $this->_service->description, "id");
-        $this->_webui->enterFieldData("retail", $this->_service->retail, "id");
-        // $this->_webui->enterFieldData("cogs", $this->_service->cogs, "id");
+        // Check if modal is now visible
+        $this->browser->waitForElement(
+            WebDriverBy::cssSelector('div.modal-content')
+        );
+
+        // Enter field Values
+        // TODO: Move to dynamic referencing model like in Funnels
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id('sku'),
+            $this->product->sku
+        );
+
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::cssSelector('[name="name"]'),
+            $this->product->name
+        );
+
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id('description'),
+            $this->product->description
+        );
+
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id('retail'),
+            !rand(0,3) ?  floatval($this->product->retail) : $this->product->retail
+        );
+
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id('cogs'),
+            !rand(0,3) ?  floatval($this->product->cogs) : $this->product->cogs
+        );
+
+        $this->setProductCategory( $this->product->category );
+        $this->setProductType( $this->product->type );
+
+        // If Digital -> Provide Download URL
+        // $this->setProductDownloadUrl()
+        //
+        // if Physical -> Provide Product Dimensions
+        // $this->setProductDimensions()
+
     }
 
     public function clickSaveButton()
     {
         // TODO: Use Save button's ID
-        $this->_webui->clickButton(
+        $this->browser->webui()->clickButton(
             WebDriverBy::cssSelector('.btn.btn-xs.btn-info.pull-right.mr20.btn-save')
         );
 
@@ -81,7 +143,7 @@ class AddProduct extends Actions
     public function clickDoneButton()
     {
         // TODO: Add ID to "Done" button
-        $this->_webui->clickButton(
+        $this->browser->webui()->clickButton(
             WebDriverBy::cssSelector(".btn.btn-default.btn-xs.pull-right.btn-dismiss")
         );
 
@@ -90,6 +152,51 @@ class AddProduct extends Actions
 
     public function refreshPage()
     {
-        $this->_webui->refreshPage();
+        $this->browser->webui()->refreshPage();
     }
+
+    public static function testifyProductDetails(HBIProduct &$product, $prefix="QA-")
+    {
+        $product->sku         = sprintf('%s%s%s', $prefix, $product->sku, rand(0,100));
+        $product->name        = sprintf('[%sTEST] %s', $prefix, $product->name);
+        $product->description = sprintf('[%sTEST Product]%s%s', $prefix, PHP_EOL, $product->description);
+    }
+
+    protected function setProductCategory($category)
+    {
+        $this->browser->webui()->clearField("s2id_autogen1","id");
+        $this->browser->webui()->removeInputedValue("a.select2-search-choice-close", "cssSelector");
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id("s2id_autogen1"),
+            $category
+        );
+        $this->browser->webui()->clickButton(
+            WebDriverBy::cssSelector(".select2-match")
+        );
+    }
+
+    protected function setProductType($type)
+    {
+        $this->browser->webui()->clearField("s2id_autogen2","id");
+        // $this->browser->webui()->removeInputedValue("a.select2-search-choice-close", "cssSelector");
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id("s2id_autogen2"),
+            $type
+        );
+        $this->browser->webui()->clickButton(
+            WebDriverBy::cssSelector(".select2-match")
+        );
+    }
+
+    protected function setProductDimensions()
+    {
+
+    }
+
+    protected function setProductDownloadUrl()
+    {
+
+    }
+
+
 }
