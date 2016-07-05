@@ -21,6 +21,7 @@ class HBIFunnelPage
     private $page;
     private $spf;
     private $opf;
+    private $cspf; // Captured Sales Page Fields
 
     public  $funnelPage;
 
@@ -175,6 +176,7 @@ class HBIFunnelPage
         print("FUNCTION : processSalesPageForm".PHP_EOL);
 
         $id = null;
+        $this->coff = array();
         try {
             print("ACTION   : Getting Form ID".PHP_EOL);
             $el      = $this->browser->driver()->findElement(
@@ -377,7 +379,24 @@ class HBIFunnelPage
     {
         print("FUNCTION : processFunnelForm".PHP_EOL);
 
+        $capture = false;
+        $verify  = false;
+        $vFields = array();
+
         // $this->page->stageType
+        // if this is SalesPage = then collect element names
+        // if this is OrderPage = compare to the COFF
+
+        $type = $this->page->stageType;
+
+        switch ($type) {
+            case 'SalesPage':
+                $capture    = true;
+                $this->cspf = array();
+                break;
+            case 'OrderForm':
+                $verify     = true;
+        }
 
         if($filter) {
             print("FILTER   : $filter".PHP_EOL);
@@ -433,6 +452,9 @@ class HBIFunnelPage
                 $value = $person->$key;
             }
 
+            if($capture) {$this->cspf[$fid] = $value;}
+            $vFields[$fid] = $value;
+
             // $this->browser->waitForElementToBeClickable(
             //     WebDriverBy::id($fid)
             // );
@@ -456,6 +478,25 @@ class HBIFunnelPage
             }
         }
 
+        if($verify && is_array($this->cspf)) {
+            // For now we will just print out issues
+            // $this->checkCarriedOverFormValues($fid, $value, $this->cspf);
+            $diff = array_diff($this->cspf, $vFields);
+
+            foreach ($diff as $k => $v) {
+                if(!isset($this->cspf[$k])) {
+                    unset($diff[$k]);
+                }
+            }
+
+            if(count($diff) > 0) {
+                print("FAILURE  : Missing/Wrong Carryover Values - ".json_encode($diff).PHP_EOL);
+            } else {
+                print("SUCCESS  : Carryover Values are correct".PHP_EOL);
+            }
+        }
+
+
         return true;
     }
 
@@ -473,8 +514,30 @@ class HBIFunnelPage
 
         $upsell = Funnel\Helpers::randomlySelectUpsells($this->browser);
 
-        $this->hbilog->writeToLogFile(array("upsell"=>$upsell));
+        if($upsell) {
 
+            $json   = HBIHelper::getDataFromHBICoreAPI(
+                        'api/funnel/get-funnel-page',
+                        array('page_id'=>$this->page->pageId)
+                    );
+
+            $page  = (object)json_decode($json)->page;
+            $offer = $page->offers[0]->offer;
+
+            // $page->offers->offer_id
+            // $page->offers->offer->offer_price
+            $up = array("upsell"=>array(
+                  "OFFERID"    =>$offer->id,
+                  "OFFERPRICE" =>$offer->offer_price,
+                  "OFFERRETAIL" =>$offer->retail,
+                  "OFFERNAME" =>$offer->name,
+                  "OFFERSKU" =>$offer->sku
+            ));
+
+            $this->hbilog->writeToLogFile($up);
+            print("UPSELL   : ".json_encode($up).PHP_EOL);
+
+        }
         return true;
     }
 
@@ -518,7 +581,7 @@ class HBIFunnelPage
      */
     private function fieldKeyTranslationTable(String $lookup)
     {
-        print("FUNCTION : fieldKeyTranslationTable".PHP_EOL);
+        print("FUNCTION : fieldKeyTranslationTable [$lookup]".PHP_EOL);
 
         $key = null;
 
@@ -684,6 +747,21 @@ class HBIFunnelPage
         // }
 
         $this->hbilog->writeToLogFile( array($inv,$ttl) );
+    }
+
+    // TODO: This is backwards really... we need to only check items that are there
+    // It would be better to just do an array_diff once the array is built
+    private function checkCarriedOverFormValues($id, $value, $array)
+    {
+        $isInArray = in_array( $id, array_flip($array) );
+
+        if($isInArray && $array[$id] == $value) {
+            print("SUCCESS  : FORM CARRY OVER SUCCESS - ".json_encode(array($id, $value)).PHP_EOL);
+            return true;
+        }
+
+        print("FAILURE  : FORM CARRY OVER FAILURE - ".json_encode(array($id, $value)).PHP_EOL);
+
     }
 
 }

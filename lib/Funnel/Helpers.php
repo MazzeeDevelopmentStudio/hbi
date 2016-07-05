@@ -129,7 +129,8 @@ class Helpers
      */
     public static function randomlySelectUpsells(HBIBrowser $browser)
     {
-        $selector  = !(bool)rand(0,4) ? 'input.responsive-img' : 'a.nothanks';
+        $bool      = (bool)rand(0,2);
+        $selector  = !$bool ? 'input.responsive-img' : 'a.nothanks';
         $isPresent = WebDriverExpectedCondition::visibilityOfElementLocated(
                         WebDriverBy::cssSelector($selector)
                     );
@@ -143,15 +144,29 @@ class Helpers
         } catch (NoSuchElementException $e) {
             return false;
         } catch (UnknownServerException  $e) {
-
+            // TODO: Do we return FALSE here as well?
         }
 
         if($isPresent && $isClickable) {
+            print("ACTION   : Clicking Upsell $selector Button".PHP_EOL);
             $browser->clickElement(
                 WebDriverBy::cssSelector($selector)
             );
+
+            try {
+                $browser->driver()->wait(15, 250)->until(
+                    WebDriverExpectedCondition::invisibilityOfElementLocated(
+                        WebDriverBy::id('processingmodal')
+                    )
+                );
+
+            } catch (TimeOutException $e) {
+
+            }
+
             // TODO: Return usable info about upsell
-            return $selector;
+            // $this->recordUpSellSelection;
+            return !$bool;
         }
 
         return false;
@@ -233,7 +248,7 @@ class Helpers
 
     public static function createRandomPhoneNumber()
     {
-        $number = rand(1111111111, 9999999999);
+        $number = rand(2012000000, 9999999999);
         $mask   = rand(1,8);
 
         return SELF::formatPhoneNumber($number, $mask);

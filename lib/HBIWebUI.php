@@ -99,6 +99,7 @@ class HBIWebUI
      */
     public function setSelectValue(WebDriverBy $by, $value)
     {
+        print("VALUE    : $value".PHP_EOL);
         $element = $this->_driver->findElement($by);
         $element->getLocationOnScreenOnceScrolledIntoView();
 
