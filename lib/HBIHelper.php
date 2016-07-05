@@ -2,7 +2,8 @@
 namespace HBI;
 
 /**
- *
+ * TODO: Move Helpers into the HBI\Utils Namespace?
+ *       OR move them into the HBI\Helpers Namespace?
  */
 class HBIHelper
 {
