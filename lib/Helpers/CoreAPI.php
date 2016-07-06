@@ -2,7 +2,7 @@
 namespace HBI\Helpers;
 
 use HBI\HBIHelper;
-use HBI\Utils\Json;
+use HBI\Utils\RestClient;
 
 /**
  *

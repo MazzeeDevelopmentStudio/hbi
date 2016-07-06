@@ -5,10 +5,10 @@ use HBI\HBIHelper;
 
 /**
  *
+ * TODO
  */
 class RestClient
 {
-
 
     public static function get($url)
     {

@@ -19,4 +19,5 @@ class HBIProduct extends HBIBasicObject
     public $weight;
     public $threshold;
     public $quantity;
+    public $downloadurl;
 }

@@ -122,11 +122,14 @@ class AddProduct extends Actions
         $this->setProductCategory( $this->product->category );
         $this->setProductType( $this->product->type );
 
-        // If Digital -> Provide Download URL
-        // $this->setProductDownloadUrl()
-        //
-        // if Physical -> Provide Product Dimensions
-        // $this->setProductDimensions()
+
+        if($this->product->type == "Physical Product") {
+            // if Physical -> Provide Product Dimensions
+            $this->setProductDimensions();
+        } elseif($this->product->type == "Digital Product") {
+            // If Digital -> Provide Download URL
+            $this->setProductDownloadUrl();
+        }
 
     }
 
@@ -190,11 +193,30 @@ class AddProduct extends Actions
 
     protected function setProductDimensions()
     {
-
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::cssSelector('[name="length"]'),
+            $this->product->length
+        );
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::cssSelector('[name="height"]'),
+            $this->product->height
+        );
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::cssSelector('[name="depth"]'),
+            $this->product->depth
+        );
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::cssSelector('[name="weight"]'),
+            $this->product->weight
+        );
     }
 
     protected function setProductDownloadUrl()
     {
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id('download_url'),
+            $this->product->downloadurl
+        );
 
     }
 
