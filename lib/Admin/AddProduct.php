@@ -63,7 +63,11 @@ class AddProduct extends Actions
         $product->retail   = Helpers::getRandomDollarAmount();
         $product->cogs     = Helpers::getRandomDollarAmount();
         $product->category = Helpers::getRandomProductCategory($this->browser);
-        $product->type     = Helpers::getRandomProductType($this->browser);
+
+        if(!isset($product->type)) {
+            $product->type = Helpers::getRandomProductType($this->browser);
+        }
+
 
         $this->log->writeToLogFile($product);
         print_r($product);
