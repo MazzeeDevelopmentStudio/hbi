@@ -38,9 +38,6 @@ class HBIAddService
 
     public function addServiceDataToForm()
     {
-        // There is a timing issue so we need to wait a second
-        sleep(1);
-
         $this->_webui->enterFieldData("sku", $this->_service->sku, "id");
         $this->_webui->enterFieldData("name", $this->_service->name, "name");
         $this->_webui->enterFieldData("description", $this->_service->description, "id");

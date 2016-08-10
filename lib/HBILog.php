@@ -33,6 +33,17 @@ class HBILog
         $this->logfile = sprintf('%s/%s.json', $dir, $id);
     }
 
+    public function setLogFilePathByID($path, $id, $filename)
+    {
+        $dir  = sprintf('%s/%s', $path, $id);
+
+        if(!file_exists($dir)) {
+            mkdir($dir);
+        }
+
+        $this->logfile = sprintf('%s/%s.json', $dir, $filename);
+    }
+
     public function writeToMonoLog()
     {
         $log = new \Monolog\Logger('name');
@@ -47,7 +58,7 @@ class HBILog
             print_r($e, true)
         );
 
-        print("EXCEPTION: $exception".PHP_EOL);
+        // print("EXCEPTION: $exception".PHP_EOL);
         $this->writeToLogFile($content);
     }
 

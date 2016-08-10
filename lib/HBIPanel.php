@@ -197,4 +197,182 @@ class HBIPanel
         return array("Title"=>$msgTitle, "Body"=>$msgBody);
 
     }
+
+    public function setTableViewSize($size)
+    {
+        // Select Name: tOrders_length
+        $this->_webui->setSelectValue(
+            WebDriverBy::cssSelector('select[name=tOrders_length]'),
+            "$size"
+        );
+
+    }
+
+    public function getAllOrderTableData()
+    {
+        // Table ID: tOrders
+
+        // Order ID
+        // Created
+        // Total
+        // Buyer
+        // Status
+    }
+
+    public function getCurrentOrderTableData()
+    {
+        // Table ID: tOrders
+        $elements = $this->_driver->findElements(
+            WebDriverBy::cssSelector('table#tOrders tbody tr td')
+        );
+
+        $i       = 0;
+        $tmp     = array();
+        $data    = array();
+        $tblCols = array('Order ID','Created', 'Total', 'Buyer', 'Status');
+
+        foreach ($elements as $el) {
+            $tmp[ $tblCols[$i] ] = $el->getText();
+
+            switch ($tblCols[$i]) {
+                case 'Order ID':
+                    $tmp['oURL'] = $this->getHREFOfChildElement($el);
+                    break;
+                case 'Buyer':
+                    $tmp['bURL'] = $this->getHREFOfChildElement($el);
+                    break;                
+            }
+
+            if( $i++ >= count($tblCols)-1 ) {
+                $data[] = $tmp;
+                $tmp = array();
+                $i=0;
+            }
+        }
+
+        // print_r($data);
+
+        return $data;
+    }
+
+    public function getHREFOfChildElement(WebDriverElement $el)
+    {
+            $cel = $el->findElement(
+                WebDriverBy::xpath(".//*")
+            );
+
+            return $cel->getAttribute('href');
+    }
+
+
+    public function clickNextPaginationSetButton()
+    {
+        return $this->clickPaginationButton('tOrders_next');
+    }
+
+    public function clickPreviousPaginationSetButton()
+    {
+        return $this->clickPaginationButton('tOrders_previous');
+    }
+
+    public function clickPaginationButton($btnId)
+    {
+        return $this->_webui->clickButton(
+            WebDriverBy::id($btnId)
+        );
+        
+        $this->waitForTableProcessingToComplete();
+    }
+
+    public function clickPaginationPageNumber($number)
+    {
+
+    }
+
+    public function getPaginationPageNumbers()
+    {
+        // paginate_button 
+        // div#tOrders_paginate span a.paginate_button
+    }
+
+    public function getCurrentPaginationPageNumber()
+    {
+        // div#tOrders_paginate span a.paginate_button.current
+    }
+
+    public function jumpToPaginationPage($pageNumber)
+    {
+        // print( sprintf('Jumping to Page Number: %s'.PHP_EOL, $pageNumber) );
+
+        $i = 1;
+        while ($i <= $pageNumber) {
+            $this->clickNextPaginationSetButton();
+            $i++;
+        }
+
+        $this->waitForTableProcessingToComplete();
+
+    }
+
+    public function getPagitationPageCount()
+    {
+        // div#tOrders_paginate span a.paginate_button
+        $elements = $this->_driver->findElements(
+            WebDriverBy::cssSelector('div#tOrders_paginate span a.paginate_button')
+        ); 
+
+        $el = $elements[ count($elements)-1 ];
+
+        return $el->getText();
+    }
+
+    public function waitForTableProcessingToComplete()
+    {
+        $this->_driver->wait(15, 250)->until(
+            WebDriverExpectedCondition::invisibilityOfElementLocated(
+                WebDriverBy::id('processingmodal')
+            )
+        );
+
+    }
+
+
+    public function isOrderURIValid($order)
+    {
+
+        $this->_driver->get( sprintf( '%s/dashboard/orders/%s', CORESERVER[ ENVIRONMENT ], $order->guid ));
+
+        // div.pageheader h2
+        $el = $this->_driver->findElement(
+            WebDriverBy::cssSelector('div.pageheader h2')
+        );
+
+        $orderId = str_replace('Order #', NULL, $el->getText());
+
+        return $order->id != $orderId ? FALSE : TRUE;
+    }
+
+    public function setSortOrderByDateDesc()
+    {
+        $el = NULL;
+        $elements = $this->_driver->findElements(
+            WebDriverBy::cssSelector('div.tOrders thead tr th')
+        );
+
+        foreach ($elements as $element) {
+            print_r($element);
+            if($element->getText() == "Created") {
+                $el = $element;
+                break;
+            }
+        }
+
+        if($el && $el->getAttribute('class') == 'sorting_desc') {
+
+            $el->click();
+        }
+
+        return true;
+    }
+
 }

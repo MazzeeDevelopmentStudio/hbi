@@ -11,6 +11,8 @@ use HBI\HBIHelper;
 use HBI\HBIService;
 use HBI\HBIServices;
 
+use joshtronic\LoremIpsum;
+
 /**
  *
  */
@@ -28,6 +30,8 @@ class AddService extends Actions
      */
     function __construct(HBIBrowser $browser, $service=null)
     {
+        parent::__construct($browser);
+        
         $this->browser = $browser;
         $this->log     = &$GLOBALS['HBILog'];
         $this->service = !empty($service) ? $service : $this->defineRandomService();
@@ -55,15 +59,20 @@ class AddService extends Actions
     // relying on the json file
     public function defineRandomService()
     {
-        $prod    = new HBIServices;
-        $service = $prod->buildCollection(1);
+        $svc     = new HBIServices;
+        $service = $svc->buildCollection(1);
+
+        if($service->isMissingProperty()) {
+            $service->sku         = SELF::RandomSku();
+            $service->name        = SELF::RandomName();
+            $service->description = SELF::RandomDescription();
+        }
 
         $this->testifyServiceDetails($service);
 
-        $service->retail   = Helpers::getRandomDollarAmount();
-        $service->cogs     = Helpers::getRandomDollarAmount();
-        $service->category = Helpers::getRandomServiceCategory($this->browser);
-        $service->type     = Helpers::getRandomServiceType($this->browser);
+        $service->retail = Helpers::getRandomDollarAmount();
+        $service->cogs   = Helpers::getRandomDollarAmount();
+        $service->notes  = SELF::RandomDescription();
 
         $this->log->writeToLogFile($service);
         print_r($service);
@@ -72,25 +81,15 @@ class AddService extends Actions
 
     }
 
-    public function openAddPanel()
-    {
-        // Need to wait for button
-        $this->browser->waitForElement(
-            WebDriverBy::cssSelector('.btn.btn-primary.btn-xs.pull-right.mb20')
-        );
-
-        // TODO: Add ID to "Add" button
-        $this->browser->webui()->clickButton(
-            WebDriverBy::cssSelector('.btn.btn-primary.btn-xs.pull-right.mb20')
-        );
-    }
-
     public function addServiceDataToForm()
     {
         // Check if modal is now visible
         $this->browser->waitForElement(
             WebDriverBy::cssSelector('div.modal-content')
         );
+
+        // We need to make sure our tab is in view first
+        $this->clickTab("Step 1: Basic Info");
 
         // Enter field Values
         // TODO: Move to dynamic referencing model like in Funnels
@@ -119,84 +118,76 @@ class AddService extends Actions
             !rand(0,3) ?  floatval($this->service->cogs) : $this->service->cogs
         );
 
-        $this->setServiceCategory( $this->service->category );
-        $this->setServiceType( $this->service->type );
-
-        // If Digital -> Provide Download URL
-        // $this->setServiceDownloadUrl()
-        //
-        // if Physical -> Provide Service Dimensions
-        // $this->setServiceDimensions()
-
-    }
-
-    public function clickSaveButton()
-    {
-        // TODO: Use Save button's ID
-        $this->browser->webui()->clickButton(
-            WebDriverBy::cssSelector('.btn.btn-xs.btn-info.pull-right.mr20.btn-save')
+        $this->clickTab("Step 2: Notes");
+        $this->browser->webui()->enterFieldData(
+            WebDriverBy::id('admin_notes'),
+            $this->service->notes
         );
 
-        sleep(1);
+        // TODO: Test the following data points
+        // Purchase Actions
+        // Return Actions
+        // Restrictions
+
     }
 
-    public function clickDoneButton()
+    public static function addServiceNotesToForm()
     {
-        // TODO: Add ID to "Done" button
-        $this->browser->webui()->clickButton(
-            WebDriverBy::cssSelector(".btn.btn-default.btn-xs.pull-right.btn-dismiss")
-        );
 
-        sleep(1);
     }
 
-    public function refreshPage()
+    public static function setServiceRestrictions()
     {
-        $this->browser->webui()->refreshPage();
+        
+
     }
 
     public static function testifyServiceDetails(HBIService &$service, $prefix="QA-")
     {
         $service->sku         = sprintf('%s%s%s', $prefix, $service->sku, rand(0,100));
         $service->name        = sprintf('[%sTEST] %s', $prefix, $service->name);
-        $service->description = sprintf('[%sTEST Service]%s%s', $prefix, PHP_EOL, $service->description);
+
+        if(!empty($service->description)) {
+            $service->description = sprintf('[%sTEST Service]%s%s', $prefix, PHP_EOL, $service->description);    
+        }
     }
 
-    protected function setServiceCategory($category)
+    public static function RandomSku()
     {
-        $this->browser->webui()->clearField("s2id_autogen1","id");
-        $this->browser->webui()->removeInputedValue("a.select2-search-choice-close", "cssSelector");
-        $this->browser->webui()->enterFieldData(
-            WebDriverBy::id("s2id_autogen1"),
-            $category
-        );
-        $this->browser->webui()->clickButton(
-            WebDriverBy::cssSelector(".select2-match")
-        );
+        $lipsum = new LoremIpsum();
+        $words  = $lipsum->words( rand(2,4) );
+        
+        $random = rand(000,999);
+
+        return preg_replace('/\s+/', '-', $words.' '.$random);
     }
 
-    protected function setServiceType($type)
+    public static function RandomName()
     {
-        $this->browser->webui()->clearField("s2id_autogen2","id");
-        // $this->browser->webui()->removeInputedValue("a.select2-search-choice-close", "cssSelector");
-        $this->browser->webui()->enterFieldData(
-            WebDriverBy::id("s2id_autogen2"),
-            $type
-        );
-        $this->browser->webui()->clickButton(
-            WebDriverBy::cssSelector(".select2-match")
-        );
-    }
+        $lipsum = new LoremIpsum();
+        $words  = $lipsum->words( rand(1,5) );
 
-    protected function setServiceDimensions()
+        return $words;
+    }    
+
+    public static function RandomDescription()
     {
+        $lipsum = new LoremIpsum();
 
+        return $lipsum->paragraphs( rand(0,1) );
     }
 
-    protected function setServiceDownloadUrl()
+    /**
+     * TODO: Move this to WebUI or to HBIPanel
+     * [clickTab description]
+     * @param  [type] $tabname [description]
+     * @return [type]          [description]
+     */
+    protected function clickTab($tabname)
     {
-
+        $this->browser->webui()->clickTab($tabname);
     }
+
 
 
 }

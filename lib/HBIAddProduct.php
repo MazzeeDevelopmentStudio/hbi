@@ -7,25 +7,25 @@ namespace HBI;
 class HBIAddProduct
 {
     private $_driver;
-    private $_service;
+    private $_product;
     private $_webui;
 
-    function __construct($driver, $service)
+    function __construct($driver, $product)
     {
-        $this->setService($service);
+        $this->setProduct($product);
 
         $this->_driver = $driver;
         $this->_webui = new HBIWebUI($this->_driver);
     }
 
-    function setService($service)
+    function setProduct($product)
     {
-        $this->_service = $service;
+        $this->_product = $product;
     }
 
-    function getService()
+    function getProduct()
     {
-        return $this->_service;
+        return $this->_product;
     }
 
     public function openAddPanel()
@@ -38,11 +38,11 @@ class HBIAddProduct
 
     public function addProductDataToForm()
     {
-        $this->_webui->enterFieldData("sku", $this->_service->sku, "id");
-        $this->_webui->enterFieldData("name", $this->_service->name, "name");
-        $this->_webui->enterFieldData("description", $this->_service->description, "id");
-        $this->_webui->enterFieldData("retail", $this->_service->retail, "id");
-        // $this->_webui->enterFieldData("cogs", $this->_service->cogs, "id");
+        $this->_webui->enterFieldData("sku", $this->_product->sku, "id");
+        $this->_webui->enterFieldData("name", $this->_product->name, "name");
+        $this->_webui->enterFieldData("description", $this->_product->description, "id");
+        $this->_webui->enterFieldData("retail", $this->_product->retail, "id");
+        // $this->_webui->enterFieldData("cogs", $this->_product->cogs, "id");
     }
 
     public function clickSaveButton()

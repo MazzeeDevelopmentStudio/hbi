@@ -28,6 +28,8 @@ class AddProduct extends Actions
      */
     function __construct(HBIBrowser $browser, $product=null)
     {
+        parent::__construct($browser);
+        
         $this->browser = $browser;
         $this->log     = &$GLOBALS['HBILog'];
         $this->product = !empty($product) ? $product : $this->defineRandomProduct();
@@ -44,6 +46,8 @@ class AddProduct extends Actions
 
     public function add()
     {
+        print("FUNCTION : AddProduct::add".PHP_EOL);
+
         $this->openAddPanel();
         $this->addProductDataToForm();
 
@@ -55,6 +59,8 @@ class AddProduct extends Actions
     // relying on the json file
     public function defineRandomProduct()
     {
+        print("FUNCTION : AddProduct::defineRandomProduct".PHP_EOL);
+
         $prod    = new HBIProducts;
         $product = $prod->buildCollection(1);
 
@@ -62,9 +68,19 @@ class AddProduct extends Actions
 
         $product->retail   = Helpers::getRandomDollarAmount();
         $product->cogs     = Helpers::getRandomDollarAmount();
+
+        $this->openAddPanel();
         $product->category = Helpers::getRandomProductCategory($this->browser);
+        print_r($product);
+
+        $this->clickDoneButton();
+
+        print("ADDED CATEGORY VALUE".PHP_EOL);
+        
+        
 
         if(!isset($product->type)) {
+            print("NO PRODUCT TYPE IS SET".PHP_EOL);
             $product->type = Helpers::getRandomProductType($this->browser);
         }
 
@@ -76,21 +92,10 @@ class AddProduct extends Actions
 
     }
 
-    public function openAddPanel()
-    {
-        // Need to wait for button
-        $this->browser->waitForElement(
-            WebDriverBy::cssSelector('.btn.btn-primary.btn-xs.pull-right.mb20')
-        );
-
-        // TODO: Add ID to "Add" button
-        $this->browser->webui()->clickButton(
-            WebDriverBy::cssSelector('.btn.btn-primary.btn-xs.pull-right.mb20')
-        );
-    }
-
     public function addProductDataToForm()
     {
+        print("FUNCTION : AddProduct::addProductDataToForm".PHP_EOL);
+
         // Check if modal is now visible
         $this->browser->waitForElement(
             WebDriverBy::cssSelector('div.modal-content')
@@ -135,31 +140,6 @@ class AddProduct extends Actions
             $this->setProductDownloadUrl();
         }
 
-    }
-
-    public function clickSaveButton()
-    {
-        // TODO: Use Save button's ID
-        $this->browser->webui()->clickButton(
-            WebDriverBy::cssSelector('.btn.btn-xs.btn-info.pull-right.mr20.btn-save')
-        );
-
-        sleep(1);
-    }
-
-    public function clickDoneButton()
-    {
-        // TODO: Add ID to "Done" button
-        $this->browser->webui()->clickButton(
-            WebDriverBy::cssSelector(".btn.btn-default.btn-xs.pull-right.btn-dismiss")
-        );
-
-        sleep(1);
-    }
-
-    public function refreshPage()
-    {
-        $this->browser->webui()->refreshPage();
     }
 
     public static function testifyProductDetails(HBIProduct &$product, $prefix="QA-")

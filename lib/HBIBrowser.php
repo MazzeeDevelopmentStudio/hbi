@@ -10,9 +10,9 @@ use \Facebook\WebDriver\WebDriverWindow;
 use \Facebook\WebDriver\WebDriverDimension;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
+use \Facebook\WebDriver\WebDriverKeys;
 use \Facebook\WebDriver\Exception;
 use \Facebook\WebDriver\Exception\WebDriverException;
-
 use \Facebook\WebDriver\Exception\UnknownServerException;
 
 /**
@@ -292,6 +292,5 @@ class HBIBrowser
         // # Use imagemagick's montage command to stitch the screenshot tiles together
         // `montage screenshot-[0-#(y_tiles}]-[0-#{x_tiles}].png -tile #{x_tiles}x#{y_tiles} -geometry #{screenshot.width}x#{screenshot.height}+0+0 screenshot.png`
     }
-
 
 }

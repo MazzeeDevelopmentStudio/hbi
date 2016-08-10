@@ -4,6 +4,7 @@ namespace HBI;
 use HBI\HBIHelper;
 use HBI\Funnel\PgDataObject;
 use HBI\Funnel\Helpers;
+use HBI\Exception\AutomationException;
 
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverElement;
@@ -197,11 +198,41 @@ class HBIFunnelPage
         // on the purchase button to invoke the form (optinform is already
         // visible on the page)
         if($id != 'optinform') {
-            print("ACTION   : Sending Click Request for 'div.purchase-button'".PHP_EOL);
-            try {
-                $this->browser->webui()->clickButton(
-                    WebDriverBy::cssSelector("div.purchase-button")
+            $selctr = '';
+            $btn    = array(
+                        'div.purchase-button a.modal-toggle',
+                        'img[alt=shipmebook]',
+                        'img[alt="SHIP IT"]',
+                        'a[href=#order]',
+                        'a.modal-toggle img.responsive-img'
+                        // 'a img.responsive-img'
+                    );
+
+            foreach ($btn as $btnCss) {
+                $srch = WebDriverExpectedCondition::presenceOfAllElementsLocatedBy(
+                    WebDriverBy::cssSelector($btnCss)
                 );
+                print_r($srch);
+                if($srch) {
+                    $selctr = $btnCss;
+                    // break;
+                }
+            }
+
+            // $el = $this->_webui->getOneOfManyElements(
+            //     WebDriverBy::cssSelector($selctr)
+            // );
+
+            print("ACTION   : Sending Click Request for '$selctr'".PHP_EOL);
+
+            try {
+                // $this->browser->webui()->clickButton(
+                //     WebDriverBy::cssSelector("div.purchase-button")
+                // );
+                $this->browser->webui()->clickButton(
+                    WebDriverBy::cssSelector($selctr)
+                );
+
             } catch (NoSuchElementException $e) {
                 // The only valid reason for this is because
                 // we already clicked it. So we make sure
@@ -214,9 +245,24 @@ class HBIFunnelPage
         // If the form is optinformodal, then we specificly get the modal ID
         // and see if its now visible
         if($id == 'optinformodal') {
-            $el = $this->browser->driver()->findElement(
-                WebDriverBy::cssSelector("div.purchase-button a.modal-toggle")
-            );
+            print("THIS IS AN OPTINFOMRMODAL!!!".PHP_EOL);
+            try {
+                $el = $this->browser->driver()->findElement(
+                    WebDriverBy::cssSelector("div.purchase-button a.modal-toggle")
+                );
+                
+            } catch (NoSuchElementException $e) {
+                try {
+                    $el = $this->browser->driver()->findElement(
+                        WebDriverBy::cssSelector('img[alt=shipmebook]')
+                    );
+                } catch (NoSuchElementException $e) {
+                    $el = $this->browser->driver()->findElement(
+                        WebDriverBy::cssSelector('a[href=#order]')
+                    );
+                }
+                    
+            }
 
             $mt  = str_replace("#", null, $mel->getAttribute("href"));
 
@@ -244,6 +290,27 @@ class HBIFunnelPage
 
 
         $ret = $this->processFunnelForm($person);
+
+        // Check for Agreement
+        // input#must-agree-terms
+        // label[for=must-agree-terms]
+        $agreeSelectors = array(
+            'input#must-agree-terms',
+            'label[for=must-agree-terms]'
+        );
+        $agree = WebDriverExpectedCondition::presenceOfElementLocated(
+                    WebDriverBy::id('must-agree-terms')
+                );
+
+        if($agree) {
+            // Select either the label or checkbox to click
+            $rnd = rand(0, count($agreeSelectors)-1);
+
+            $this->browser->clickElement(
+                WebDriverBy::cssSelector( $agreeSelectors[$rnd] )
+            );
+        }
+
 
         $possbileButtons = array("submitcheckoutform","submit");
 
@@ -347,6 +414,24 @@ class HBIFunnelPage
             sprintf('%s/%s/%s_ORDERFORM_VIEW.png',
             LOGSDIR, $GLOBALS['DATE'], $GLOBALS['SID'])
         );
+
+        // Look for the "Activate" checkbox
+        try {
+            WebDriverExpectedCondition::presenceOfElementLocated(
+                WebDriverBy::id('activecta')
+            );
+            $activecta = true;
+        } catch (Exception $e) {
+            $activecta = false;
+        }
+
+        if($activecta) {
+            $this->browser->clickElement(
+                // We randomaly select either the label or checkbox to click on
+                // TODO: We need to record and/or handle issues if there is a problem
+                rand(0,1) ? WebDriverBy::cssSelector('label[for=activecta]') : WebDriverBy::id('activecta')
+            );
+        }
 
         // Submit Order
         $this->browser->clickElement(
@@ -746,7 +831,7 @@ class HBIFunnelPage
         //     $this->hbilog->writeToLogFile( array('TEST-FAILURE'=>array("TOTALS CALCULATION"=>$ttl )));
         // }
 
-        $this->hbilog->writeToLogFile( array($inv,$ttl) );
+        $this->hbilog->writeToLogFile( array('invoice'=>$inv,'totals'=>$ttl) );
     }
 
     // TODO: This is backwards really... we need to only check items that are there

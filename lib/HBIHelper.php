@@ -130,16 +130,11 @@ class HBIHelper
      * @return [JSON]         [description]
      */
     public static function getDataFromHBICoreAPI($api, $fields=array())
-    {
-        // $url  = sprintf('%s/%s', APISERVER, $api);
-        $url  = sprintf('%s/%s', CORESERVER['development'], $api);
-        $qstr = 'key='.APIKEY;
-
-        foreach($fields as $k => $v) {
-            $qstr = sprintf('%s&%s=%s', $qstr, $k, $v);
-        }
-
-        $ch = curl_init();
+    {        
+        $url           = sprintf('%s/%s', APISERVER[ENVIRONMENT], $api);
+        $fields['key'] = APIKEY[ENVIRONMENT];
+        $qstr          = http_build_query($fields);
+        $ch            = curl_init();
 
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
@@ -148,8 +143,9 @@ class HBIHelper
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
+        // print( 'Grabbing Data From URI: '.$url . '?' . $qstr.PHP_EOL  );
+
         $json = curl_exec($ch);
-        // $json = file_get_contents($url . '?' . $qstr);
 
         return $json;
     }
@@ -264,4 +260,60 @@ class HBIHelper
 
         return null;
     }
+
+
+    public static function checkFor404s($url)
+    {
+        $handle = curl_init($url);
+        curl_setopt($handle,  CURLOPT_RETURNTRANSFER, TRUE);
+
+        /* Get the HTML or whatever is linked in $url. */
+        $response = curl_exec($handle);
+
+        /* Check for 404 (file not found). */
+        $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        if($httpCode == 404) {
+            /* Handle 404 here. */
+        }
+
+        curl_close($handle);
+
+        /* Handle $response here. */
+    }
+
+    public static function csvToArray($filename='', $delimiter=',')
+    {
+        if(!file_exists($filename) || !is_readable($filename))
+            return FALSE;
+        
+        $header = NULL;
+        $data = array();
+        if (($handle = fopen($filename, 'r')) !== FALSE)
+        {
+            while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE)
+            {
+                if(!$header)
+                    $header = $row;
+                else
+                    $data[] = array_combine($header, $row);
+            }
+            fclose($handle);
+        }
+        return $data;
+    }
+
+    public static function csvToJson($filename='', $delimiter=',')
+    {
+        $data = SELF::csvToArray($filename, $delimiter);
+
+        return json_encode($data);
+    }
+
+    public static function csvToObject($filename='', $delimiter=',')
+    {
+        $json = SELF::csvToJson($filename, $delimiter);
+
+        return json_decode($json);
+    }
+
 }

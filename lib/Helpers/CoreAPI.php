@@ -33,7 +33,7 @@ class CoreAPI
     protected static function coreData($api, $fields=array())
     {
         $base_url = sprintf('%s/%s', CORESERVER['development'], $api);
-        $qstr     = 'key='.APIKEY;
+        $qstr     = 'key='.APIKEY.'&automation=true';
 
         foreach($fields as $k => $v) {
             $qstr = sprintf('%s&%s=%s', $qstr, $k, $v);

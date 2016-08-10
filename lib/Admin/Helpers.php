@@ -54,7 +54,9 @@ class Helpers
 
     static public function getRandomProductCategory(HBIBrowser $browser)
     {
-        $options = $browser->webui()->getHiddenOptions("category_ids[]");
+        print("FUNCTION : Helpers::getRandomProductCategory".PHP_EOL);
+
+        $options = $browser->webui()->getHiddenOptions("categories[]");
         $rand    = rand(0, count($options)-1);
 
         return $options[$rand];

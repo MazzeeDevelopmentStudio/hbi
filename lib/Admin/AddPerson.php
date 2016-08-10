@@ -134,8 +134,14 @@ class AddPerson extends Actions
         print_r($this->person);
         $addr       = $this->person->address;
 
-        $this->setContactState($addr->administrative_area_level_1);
+
         $this->setContactCountry($addr->country);
+        if($addr->country != 'United States') {
+            $this->setContactProvince($addr->administrative_area_level_1);
+        } else {
+            $this->setContactState($addr->administrative_area_level_1);
+        }
+        
 
         $this->browser->webui()->enterFieldData(
             WebDriverBy::id("addresses[0][address1]"),
@@ -165,7 +171,7 @@ class AddPerson extends Actions
      * [openAddPanel description]
      * @return [type] [description]
      */
-    protected function openAddPanel()
+    public function openAddPanel()
     {
         // TODO: Add ID to "Add" button
         $this->browser->webui()->clickButton(
@@ -184,7 +190,7 @@ class AddPerson extends Actions
      * [clickSaveButton description]
      * @return [type] [description]
      */
-    protected function clickSaveButton()
+    public function clickSaveButton()
     {
         // TODO: Use Save button's ID
         $this->browser->webui()->clickButton(
@@ -197,7 +203,7 @@ class AddPerson extends Actions
      * [clickDoneButton description]
      * @return [type] [description]
      */
-    protected function clickDoneButton()
+    public function clickDoneButton()
     {
         // TODO: Add ID to "Done" button
         $this->browser->webui()->clickButton(
@@ -243,6 +249,30 @@ class AddPerson extends Actions
         );
     }
 
+    /**
+     * [setContactProvince description]
+     * @param [type] $state [description]
+     */
+    protected function setContactProvince($province)
+    {
+        // Test Case: Check if Province is actually showing
+        // If not, then throw AutomationException reporting issue
+        try {
+            $this->browser->driver()->wait(20, 250)->until(
+                WebDriverExpectedCondition::visibilityOfElementLocated(
+                    WebDriverBy::id('addresses[0][province]')
+                )
+            );
+
+            $this->browser->webui()->enterFieldData(
+                WebDriverBy::id("addresses[0][province]"),
+                $province
+            );
+        } catch (NoSuchElementException $e) {
+            throw new AutomationException("Province Form Field did not show.");
+        }
+    }
+
     protected function setContactCountry($country)
     {
         $this->browser->clickElement(
@@ -263,7 +293,7 @@ class AddPerson extends Actions
      * [refreshPage description]
      * @return [type] [description]
      */
-    protected function refreshPage()
+    public function refreshPage()
     {
         $this->browser->webui()->refreshPage();
     }

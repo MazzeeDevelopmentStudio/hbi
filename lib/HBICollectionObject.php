@@ -22,8 +22,8 @@ class HBICollectionObject
         $class = $this->objClassName;
 
         for ($i=0;$i<$collection_size;$i++) {
-            $item   = HBIHelper::randItemFromJsonFile( $this->jsonDataFile );
-            $obj    = new $class($item);
+            $item = HBIHelper::randItemFromJsonFile( $this->jsonDataFile );
+            $obj  = new $class($item);
 
             $collection->add($obj);
 

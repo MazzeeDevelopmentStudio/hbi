@@ -54,13 +54,16 @@ class HBIWebUI
             // Should we make sure page has not changed?
             // print("EXCEPTION: NoSuchElementException [Button could not be found]".PHP_EOL);
             // throw new NoSuchElementException("Button was not found", 1);
+            // print_r($e);
             return false;
         } catch (UnknownServerException $e) {
             // print("EXCEPTION: UnknownServerException [Button could not be clicked]".PHP_EOL);
             // throw new AutomationException("Element is not clickable");
+            print_r($e);
             return false;
         }
 
+        return true;
     }
 
     /**
@@ -299,4 +302,19 @@ class HBIWebUI
         $lel->click();
       }
     }
+
+    public function checkForTrkrFunction()
+    {
+        $script  = '
+            var ret = false;
+            if (typeof hbitrk == "function") {
+               ret = true;
+            }
+            return ret;
+        ';
+        $results = $this->_driver->executeScript($script);
+
+        return (object)$results;
+    }
+
 }
