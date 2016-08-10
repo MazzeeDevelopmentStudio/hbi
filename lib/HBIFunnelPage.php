@@ -212,10 +212,10 @@ class HBIFunnelPage
                 $srch = WebDriverExpectedCondition::presenceOfAllElementsLocatedBy(
                     WebDriverBy::cssSelector($btnCss)
                 );
-                print_r($srch);
+
                 if($srch) {
                     $selctr = $btnCss;
-                    // break;
+                    break;
                 }
             }
 
