@@ -2,6 +2,7 @@
 namespace HBI;
 
 use HBI\HBICreditCards;
+use HBI\Exception\AutomationException;
 
 /**
 *
@@ -60,6 +61,93 @@ class HBICreditCardCreator
         }
 
         return $this->_cards;
+    }
+
+    public function generateSandboxCC($cardType, $genQty = 1)
+    {
+        $cList = $this->getSandboxCCList('recurly');
+
+        for($i = 0; $i < $genQty; $i++) {
+            $cc       = new HBICreditCard;
+            $cTypeKey = $cardType == 'random' ? array_rand($cList) : $cardType;
+            $cc->type = $cTypeKey;
+
+            // checking if the card type has multiple numbers available
+            if(is_array( $cList[$cTypeKey] )) {
+                $cTypeSubKey = array_rand( $cList[$cTypeKey] );
+                $cardNum     = $cList[ $cTypeKey ][$cTypeSubKey];
+            } else {
+                $cardNum = $cList[ $cTypeKey ];
+            }
+
+            $cc->number = $cardNum;
+            $cc->cvv    = SELF::createCvv(
+                            $cc->type == "American Express" ? true : false
+                          );
+
+            $cc->expiration = SELF::createExpireDate();
+            $this->_cards[] = $cc;
+
+        }
+
+        print("CARD INFO: ".json_encode($this->_cards).PHP_EOL);
+
+        if($genQty == 1) {
+            return $this->_cards[0];
+        }
+
+        return $this->_cards;
+
+    }
+
+    private function getSandboxCCList($listType = 'recurly')
+    {
+        $ccList = array();
+
+        $ccList['authnet'] = array(
+            'American Express'=>'370000000000002',
+            // 'Discover'=>        '6011000000000012',
+            // 'JCB'=>             '3088000000000017',
+            // 'Diners Club'=>     '38000000000006',
+            // 'Carte Blanch'=>    '38000000000006',
+            'Visa'=>array(
+                                '4007000000027',
+                                '4012888818888',
+                                '4111111111111111',
+                    ),
+            'Master Card'=>      '5424000000000015'
+        );
+        
+        $ccList['recurly'] = array(
+            'American Express'=>array(
+                '378282246310005',
+                '371449635398431',
+                '378734493671000'
+            ),
+            // We should check for wrong CC types
+            // 'Diners Club'=>array(
+            //     '30569309025904',
+            //     '38520000023237'
+            // ),
+            // 'Discover'=>array(
+            //     '6011111111111117',
+            //     '6011000990139424'
+            // ),
+            // 'JCB'=>array(
+            //     '3530111333300000',
+            //     '3566002020360505'
+            // ),
+            'Master Card'=>array(
+                '5555555555554444',
+                '5105105105105100'
+            ),
+            'Visa'=>array(
+                '4012888888881881',
+                '4222222222222'
+            )
+        );
+
+        return $ccList[$listType];
     }
 
     /**

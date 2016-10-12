@@ -74,12 +74,15 @@ class HBIWebUI
      */
     public function enterFieldData(WebDriverBy $by, $value)
     {
-        print("VALUE    : $value".PHP_EOL);
+        print("FUNCTION : enterFieldData".PHP_EOL);
 
         $field = $this->_driver->findElement($by);
 
         $field->clear();
         $field->sendKeys($value);
+
+        print("ELEMENT  : ".$field->getAttribute('name').PHP_EOL);
+        print("VALUE    : $value".PHP_EOL);
     }
 
     /**
@@ -102,9 +105,15 @@ class HBIWebUI
      */
     public function setSelectValue(WebDriverBy $by, $value)
     {
-        print("VALUE    : $value".PHP_EOL);
+        print("FUNCTION : setSelectValue".PHP_EOL);
+
+        sleep(1);
+
         $element = $this->_driver->findElement($by);
         $element->getLocationOnScreenOnceScrolledIntoView();
+
+        print("ELEMENT  : ".$element->getAttribute('name').PHP_EOL);
+        print("VALUE    : $value".PHP_EOL);
 
         $this->_driver->wait(20, 250)->until(
             WebDriverExpectedCondition::elementToBeClickable($by)
@@ -115,6 +124,9 @@ class HBIWebUI
         // Get Current Value
         // If Current Value == Value, then return
         $cval = $select->getFirstSelectedOption();
+
+        print("VALUE    : ".json_encode($cval).PHP_EOL);
+
         if($cval != $value) {
           $select->selectByVisibleText($value);
         }
@@ -208,7 +220,7 @@ class HBIWebUI
      * @return [type]            [description]
      */
     public function removeInputedValue($fieldname, $fieldby)
-    {
+    {        
         $elements = $this->_driver->findElements(
           WebDriverBy::$fieldby($fieldname)
         );
@@ -228,15 +240,16 @@ class HBIWebUI
      * @param  WebDriverBy $webdriverby [description]
      * @return [type]                   [description]
      */
-    public function getOneOfManyElements(WebDriverBy $by) {
+    public function getOneOfManyElements(WebDriverBy $by)
+    {
+        print("FUNCTION : getOneOfManyElements".PHP_EOL);
+
         $elements = $this->_driver->findElements($by);
+
+        print("INFO MSG : Found ".count($elements)." Elements".PHP_EOL);        
+
         $rnd      = rand(0, count($elements)-1);
         $el       = isset($elements[$rnd]) ? $elements[$rnd] : false;
-
-        // quirk in selenium.... in case there is only one element
-        // if(!$el) {
-        //     $el = $this->_driver->findElement($by);
-        // }
 
         return $el;
     }

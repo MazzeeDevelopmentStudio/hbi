@@ -135,6 +135,7 @@ class HBIBrowser
 
     public function clickElement(WebDriverBy $by)
     {
+        print("FUNCTION : clickElement".PHP_EOL);
 
         // Get a single element from a list of one or more elements
         $el = $this->_webui->getOneOfManyElements($by);
@@ -148,10 +149,11 @@ class HBIBrowser
         // Bring it to view
         $el->getLocationOnScreenOnceScrolledIntoView();
 
-        $this->_driver->wait(5, 1000)->until(
+        $this->_driver->wait(5, 250)->until(
             WebDriverExpectedCondition::visibilityOf($el)
         );
 
+        // TODO: Start handling issue for element click
         try {
             // click it
             $el->click();

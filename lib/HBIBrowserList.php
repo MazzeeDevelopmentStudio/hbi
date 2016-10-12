@@ -38,6 +38,8 @@ class HBIBrowserList
     private function createValidBrowserListByPlatform()
     {
         $list = array();
+        print_r(PLATFORMS);
+        print_r(BROWSERS);
 
         foreach (PLATFORMS as $p => $pw) {
             foreach (BROWSERS as $b => $bw) {
@@ -57,6 +59,8 @@ class HBIBrowserList
      */
     private function isBrowserValid($browserName, $platform)
     {
+        // print sprintf('isBrowserValid: %s - %s'.PHP_EOL, $browserName, $platform);
+
         $dc  = DesiredCapabilities::$browserName();
         $hub = isset( SELENIUMHUB[$platform] ) ?  SELENIUMHUB[$platform] : $platform;
         try{

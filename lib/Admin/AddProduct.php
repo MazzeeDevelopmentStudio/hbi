@@ -52,6 +52,8 @@ class AddProduct extends Actions
         $this->addProductDataToForm();
 
         $this->clickSaveButton();
+
+        
         $this->clickDoneButton();
     }
 
@@ -71,22 +73,20 @@ class AddProduct extends Actions
 
         $this->openAddPanel();
         $product->category = Helpers::getRandomProductCategory($this->browser);
-        print_r($product);
 
         $this->clickDoneButton();
 
-        print("ADDED CATEGORY VALUE".PHP_EOL);
-        
-        
+        print("ACTION   : ADDED CATEGORY VALUE".PHP_EOL);
 
         if(!isset($product->type)) {
-            print("NO PRODUCT TYPE IS SET".PHP_EOL);
+            print("WARNING  : NO PRODUCT TYPE IS SET".PHP_EOL);
             $product->type = Helpers::getRandomProductType($this->browser);
         }
 
 
         $this->log->writeToLogFile($product);
-        print_r($product);
+
+        print("DATA     : ".json_encode( $product ).PHP_EOL);
 
         return $product;
 
@@ -131,7 +131,6 @@ class AddProduct extends Actions
         $this->setProductCategory( $this->product->category );
         $this->setProductType( $this->product->type );
 
-
         if($this->product->type == "Physical Product") {
             // if Physical -> Provide Product Dimensions
             $this->setProductDimensions();
@@ -139,7 +138,6 @@ class AddProduct extends Actions
             // If Digital -> Provide Download URL
             $this->setProductDownloadUrl();
         }
-
     }
 
     public static function testifyProductDetails(HBIProduct &$product, $prefix="QA-")
@@ -201,7 +199,6 @@ class AddProduct extends Actions
             WebDriverBy::id('download_url'),
             $this->product->downloadurl
         );
-
     }
 
 

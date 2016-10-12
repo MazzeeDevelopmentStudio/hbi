@@ -89,6 +89,22 @@ class AddPerson extends Actions
         return $person;
     }
 
+    protected function defineExistingPerson()
+    {
+        // Since HBI Core does not wildcard searches, we will need to 
+        // loop through "guesses" until we get a result.
+
+        // #1 Grab a set of random people
+        $ppl              = new HBIPeople();
+        $people           = $ppl->buildCollection(100);
+        
+        foreach ($people as $person) {
+            print_r($person);
+        }
+
+        die();
+    }
+
     /**
      * [defineRandomPersonType description]
      * @return [type] [description]

@@ -7,5 +7,5 @@ namespace HBI;
 class HBIResources extends HBICollectionObject
 {
     public $objClassName = 'HBI\HBIResource';
-    public $jsonDataFile = DATADIR.'/resources.json';
+    public $jsonDataFile = DATADIR.'/products.json';
 }

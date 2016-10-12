@@ -96,7 +96,11 @@ class Helpers
     public static function getPersonWithAddress()
     {
         $person           = SELF::getPerson();
-        $addr             = new HBIAddresses;
+        $code             = HBIHelper::getCountryCode($person->residency);
+
+        $addr               = new HBIAddresses;
+        $addr->jsonDataFile = sprintf('%s/addresses_%s.json', DATADIR, strtolower($code));
+
         $person->address  = $addr->buildCollection(1);
         $person->contact  = null;
 
@@ -111,7 +115,9 @@ class Helpers
     {
         $person        = SELF::getPersonWithAddress();
         $creator       = new HBICreditCardCreator;
-        $person->card  = $creator->generate('random', 1);
+        // $person->card  = $creator->generateSandboxCC('American Express', 1);
+        $person->card  = $creator->generateSandboxCC('random', 1);
+        // $person->card  = $creator->generate('random', 1);
 
         // Add International Address to the mix
         // This will be put into its more complete form later
@@ -432,11 +438,38 @@ class Helpers
         $person->email   = sprintf('%s%s', $prefix, $person->email);
     }
 
+    /**
+     * [dollarsToFloat description]
+     * @param  [type] $dollars [description]
+     * @return [type]          [description]
+     */
     public static function dollarsToFloat($dollars)
     {
         $fls = str_replace('$',NULL,$dollars);
 
         return number_format((float)$fls, 2, '.', '');
+    }
+
+    /**
+     * [checkProductRestrictions description]
+     * @param  HBIPerson  $person  [description]
+     * @param  HBIProduct $product [description]
+     * @return [type]              [description]
+     */ 
+    public static function isProductRestricted(HBIPerson $person, HBIProduct $product)
+    {
+        $json = HBIHelper::getDataFromHBICoreAPI(
+                    'api/inv/get-item',
+                    array('sku'=>$product->sku)
+                );
+        $objs = (object)json_decode($json);
+
+        print_r($objs);
+
+        // foreach ($objs->items as $prod) {
+            
+        // }
+
     }
 
 }

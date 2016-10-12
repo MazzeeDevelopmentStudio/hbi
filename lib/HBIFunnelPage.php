@@ -11,6 +11,7 @@ use \Facebook\WebDriver\WebDriverElement;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Exception\TimeOutException;
+use \Facebook\WebDriver\Remote\RemoteWebElement;
 
 /**
 *
@@ -20,8 +21,8 @@ class HBIFunnelPage
     private $browser;
     private $hbilog;
     private $page;
-    private $spf;
-    private $opf;
+    private $spf;  // Sales Page Fields
+    private $opf;  // Order Page Fields
     private $cspf; // Captured Sales Page Fields
 
     public  $funnelPage;
@@ -50,6 +51,14 @@ class HBIFunnelPage
     public function initiateNewPage()
     {
         print("FUNCTION : initiateNewPage".PHP_EOL);
+
+        // TODO: Handle Location Restrictions
+        $modal = SELF::isFunnelRestricted();
+
+        if($modal) {
+            SELF::removeRestrictionModal($modal);
+        }
+
         if($this->isSamePageObject()
             && ($this->page->pageId == $this->funnelPage->page->id)) {
             return;
@@ -171,10 +180,15 @@ class HBIFunnelPage
      * [processSalesPageForm description]
      * @param  HBIPerson $person [description]
      * @return [type]            [description]
+     * TODO: Clean Up - This is a very sloppy mess
      */
     public function processSalesPageForm(HBIPerson $person)
     {
         print("FUNCTION : processSalesPageForm".PHP_EOL);
+
+        // TODO: Look for the hidden-after-video class. If found
+        // run Video Check test case and/or make form show so we can
+        // process it. This will be an inline form type
 
         $id = null;
         $this->coff = array();
@@ -201,38 +215,47 @@ class HBIFunnelPage
             $selctr = '';
             $btn    = array(
                         'div.purchase-button a.modal-toggle',
+                        'a.modal-toggle img.responsive-img',
                         'img[alt=shipmebook]',
-                        'img[alt="SHIP IT"]',
-                        'a[href=#order]',
-                        'a.modal-toggle img.responsive-img'
+                        'img[alt="SHIP IT"]'
+                        // 'a[href="#order"] img.responsive-img',
                         // 'a img.responsive-img'
                     );
 
             foreach ($btn as $btnCss) {
-                $srch = WebDriverExpectedCondition::presenceOfAllElementsLocatedBy(
-                    WebDriverBy::cssSelector($btnCss)
-                );
 
-                if($srch) {
+                // $srch = WebDriverExpectedCondition::presenceOfAllElementsLocatedBy(
+                //     WebDriverBy::cssSelector($btnCss)
+                // );
+
+                try {
+                    print("SEARCHING: Form Button [$btnCss]".PHP_EOL);
+
+                    $srch = $this->browser->driver()->findElements(
+                        WebDriverBy::cssSelector($btnCss)
+                    );
+
+                    if(!(bool)count($srch)) {
+                        throw new NoSuchElementException("Button was not found", 1);
+                    }
+
                     $selctr = $btnCss;
-                    break;
+
+                    print("FOUND IT : Form Button [$btnCss]".PHP_EOL);
+
+                    break;                    
+                } catch (NoSuchElementException $e) {
+                    print("NOT FOUND: Form Button [$btnCss]".PHP_EOL);
                 }
             }
-
-            // $el = $this->_webui->getOneOfManyElements(
-            //     WebDriverBy::cssSelector($selctr)
-            // );
 
             print("ACTION   : Sending Click Request for '$selctr'".PHP_EOL);
 
             try {
-                // $this->browser->webui()->clickButton(
-                //     WebDriverBy::cssSelector("div.purchase-button")
-                // );
-                $this->browser->webui()->clickButton(
+                // We need to find one of many here
+                $this->browser->clickElement(
                     WebDriverBy::cssSelector($selctr)
                 );
-
             } catch (NoSuchElementException $e) {
                 // The only valid reason for this is because
                 // we already clicked it. So we make sure
@@ -288,7 +311,6 @@ class HBIFunnelPage
             );
         }
 
-
         $ret = $this->processFunnelForm($person);
 
         // Check for Agreement
@@ -298,11 +320,13 @@ class HBIFunnelPage
             'input#must-agree-terms',
             'label[for=must-agree-terms]'
         );
+
         $agree = WebDriverExpectedCondition::presenceOfElementLocated(
                     WebDriverBy::id('must-agree-terms')
                 );
 
         if($agree) {
+            print("INFO     : Must Agree To Terms Checkbox Found".PHP_EOL);
             // Select either the label or checkbox to click
             $rnd = rand(0, count($agreeSelectors)-1);
 
@@ -310,7 +334,6 @@ class HBIFunnelPage
                 WebDriverBy::cssSelector( $agreeSelectors[$rnd] )
             );
         }
-
 
         $possbileButtons = array("submitcheckoutform","submit");
 
@@ -332,10 +355,10 @@ class HBIFunnelPage
 
         if( $located ) {
             print("ACTION   : Sending Click Request for '$possbileButtons[$i]'".PHP_EOL);
-            $this->browser->webui()->clickButton(
+
+            $this->browser->clickElement(
                 WebDriverBy::id($possbileButtons[$i])
             );
-
         }
 
         // div#processingmodal
@@ -382,8 +405,7 @@ class HBIFunnelPage
 
         // Wait for our Page Title
         $pgTitle = $this->page->pageName;
-
-        $ret = $this->processFunnelForm($person);
+        $ret     = $this->processFunnelForm($person);
 
         if(isset($person->shipping)) {
             try {
@@ -397,10 +419,8 @@ class HBIFunnelPage
             }
         }
 
-
         $addOnIds = $this->getAddonsIdsForPage();
-
-        $addons = Funnel\Helpers::randomlySelectAddonsByIds($this->browser, $addOnIds);
+        $addons   = Funnel\Helpers::randomlySelectAddonsByIds($this->browser, $addOnIds);
 
         $this->hbilog->writeToLogFile(array("addons"=>$addOnIds));
 
@@ -467,10 +487,6 @@ class HBIFunnelPage
         $capture = false;
         $verify  = false;
         $vFields = array();
-
-        // $this->page->stageType
-        // if this is SalesPage = then collect element names
-        // if this is OrderPage = compare to the COFF
 
         $type = $this->page->stageType;
 
@@ -540,9 +556,7 @@ class HBIFunnelPage
             if($capture) {$this->cspf[$fid] = $value;}
             $vFields[$fid] = $value;
 
-            // $this->browser->waitForElementToBeClickable(
-            //     WebDriverBy::id($fid)
-            // );
+            print("ELEMENT  : ".json_encode($elType).PHP_EOL);
 
             switch ($elType) {
                 case 'input':
@@ -555,8 +569,6 @@ class HBIFunnelPage
                 case 'select':
                     $this->browser->webui()->setSelectValue(
                         WebDriverBy::id($fid),
-                        // Special Case Country Values
-                        // Maybe we should use web service to get country id?
                         ($root == "country_id") ? strtoupper($value) : $value
                     );
                     break;
@@ -666,8 +678,7 @@ class HBIFunnelPage
      */
     private function fieldKeyTranslationTable(String $lookup)
     {
-        print("FUNCTION : fieldKeyTranslationTable [$lookup]".PHP_EOL);
-
+        // print("FUNCTION : fieldKeyTranslationTable [$lookup]".PHP_EOL);
         $key = null;
 
         try {
@@ -741,6 +752,32 @@ class HBIFunnelPage
         }
 
         return $addOnIds;
+    }
+
+    public function isFunnelRestricted() 
+    {
+        try {
+           WebDriverExpectedCondition::visibilityOfElementLocated(
+                WebDriverBy::id('itemrestrictedmodal')
+           );
+
+            $modal = $this->browser->driver()->findElement(
+                WebDriverBy::id('itemrestrictedmodal')
+            );
+        } catch (NoSuchElementException $e) {
+            // TODO: REMOVE THIS WHEN Restriction Handling in completed
+            throw new AutomationException("Page is restricted");
+            
+            // We are good to go
+            return false;
+        }
+
+        return $modal;
+    }
+
+    public function removeRestrictionModal(RemoteWebElement $modal)
+    {
+        // max-width: 700px; z-index: 1003; display: block;
     }
 
     public function processFinalReceipt()
@@ -836,6 +873,7 @@ class HBIFunnelPage
 
     // TODO: This is backwards really... we need to only check items that are there
     // It would be better to just do an array_diff once the array is built
+    // We need to log the values from the SP Form... then check them explicitly in the OP form 
     private function checkCarriedOverFormValues($id, $value, $array)
     {
         $isInArray = in_array( $id, array_flip($array) );

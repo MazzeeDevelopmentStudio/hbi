@@ -8,6 +8,3 @@ class HBIStages extends HBICollectionObject
 {
     public $objClassName = 'HBI\HBIStage';
 }
-
-
-
